@@ -1,8 +1,8 @@
 # SQL Community Presentations
 
-This is a centralized repo for SQL Server / PowerShell presentations for speakers who are interested. Anyone is welcome to add their own presentations and code via a Pull Request.
+This is a centralized repo for SQL Server presentations from the SQL Server Community Collaborative.
 
-Please use lower case and use a dash instead of spaces. This follows the format of weblinks. 
+Please feel free to add your own presentations and use lower case and use a dash instead of spaces. This follows the format of weblinks. 
 
 * author-name\presentation-name.pptx
 * author-name\presentation-name-code.zip
