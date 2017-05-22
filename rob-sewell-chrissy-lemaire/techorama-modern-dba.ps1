@@ -27,7 +27,7 @@ Restore-DbaDatabase -SqlInstance $instance -Path "C:\temp\AdventureWorks2012-Ful
 
 # ola!
 Invoke-Item \\workstation\backups\WORKSTATION\SharePoint_Config
-Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance $new -NoRecovery -RestoreTime (Get-date).AddHours(-3)
+Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance $new -RestoreTime (Get-date).AddHours(-3) # -NoRecovery
 
 # What about backups?
 Get-DbaDatabase -SqlInstance $instance -Databases SharePoint_Config | Backup-DbaDatabase -BackupDirectory C:\temp -NoCopyOnly
@@ -55,6 +55,10 @@ $allservers | Test-DbaSpn | Out-GridView -PassThru | Set-DbaSpn -Whatif
 Get-DbaSpn | Remove-DbaSpn -Whatif
 
 #endregion
+
+# region cleanup real quick
+# Get-DbaDatabase -SqlInstance $new -NoSystemDb | Remove-DbaDatabase
+# end region
 
 #region holiday
 # Get-DbaLastBackup - by @powerdbaklaas
@@ -175,6 +179,10 @@ Test-DbaIdentityUsage -SqlInstance $instance | Out-GridView
 
 # Execution plan export
 Get-DbaExecutionPlan -SqlInstance $instance | Export-DbaExecutionPlan -Path C:\temp
+
+# OGV madness
+Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -NetworkShare \\workstation\c$\temp
+
 #endregion
 
 #region configs
