@@ -30,10 +30,10 @@ Invoke-Item \\workstation\backups\WORKSTATION\SharePoint_Config
 Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance $new
 
 # What about backups?
-Get-DbaDatabase -SqlInstance $instance -Databases SharePoint_Config | Backup-DbaDatabase -BackupDirectory C:\temp -NoCopyOnly
+Get-DbaDatabase -SqlInstance $instance -Database SharePoint_Config | Backup-DbaDatabase -BackupDirectory C:\temp -NoCopyOnly
 
 # history
-Get-DbaBackupHistory -SqlInstance $instance -Databases AdventureWorks2012, SharePoint_Config | Out-GridView
+Get-DbaBackupHistory -SqlInstance $instance -Database AdventureWorks2012, SharePoint_Config | Out-GridView
 
 # backup header
 Read-DbaBackupHeader -SqlInstance $instance -Path "\\workstation\backups\WORKSTATION\SharePoint_Config\FULL\WORKSTATION_SharePoint_Config_FULL_20170114_224317.bak" | SELECT ServerName, DatabaseName, UserName, BackupFinishDate, SqlVersion, BackupSizeMB
@@ -95,7 +95,7 @@ Test-DbaLastBackup -SqlInstance $old -Destination $new -VerifyOnly | Out-GridVie
 
 # Get Db Free Space AND write it to disk
 Get-DbaDatabaseFreespace -SqlInstance $instance
-Get-DbaDatabaseFreespace -SqlInstance $instance -IncludeSystemDBs | Out-DbaDataTable | Write-DbaDataTable -SqlInstance $instance -Database tempdb -Table DiskSpaceExample -AutoCreateTable
+Get-DbaDatabaseFreespace -SqlInstance $instance -IncludeSystemDB | Out-DbaDataTable | Write-DbaDataTable -SqlInstance $instance -Database tempdb -Table DiskSpaceExample -AutoCreateTable
 
 # Run a lil query
 Ssms.exe "C:\temp\tempdbquery.sql"
