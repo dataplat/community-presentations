@@ -27,7 +27,7 @@ Restore-DbaDatabase -SqlInstance $instance -Path "C:\temp\AdventureWorks2012-Ful
 
 # ola!
 Invoke-Item \\workstation\backups\WORKSTATION\SharePoint_Config
-Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance $new -RestoreTime (Get-date).AddHours(-3) # -NoRecovery
+Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance $new
 
 # What about backups?
 Get-DbaDatabase -SqlInstance $instance -Databases SharePoint_Config | Backup-DbaDatabase -BackupDirectory C:\temp -NoCopyOnly
