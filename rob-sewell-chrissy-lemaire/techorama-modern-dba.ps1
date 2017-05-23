@@ -201,8 +201,8 @@ $propcompare = foreach ($prop in $oldprops) {
 
 $propcompare | Out-GridView
 
-# Copy-SqlSpConfigure
-Copy-SqlSpConfigure -Source $old -Destination $new -Config DefaultBackupCompression, IsSqlClrEnabled
+# Copy-DbaSpConfigure
+Copy-DbaSpConfigure -Source $old -Destination $new -Config DefaultBackupCompression, IsSqlClrEnabled
 
 # Get-DbaSpConfigure - @sirsql
 Get-DbaSpConfigure -SqlInstance $new | Where-Object { $_.ConfigName -in 'DefaultBackupCompression', 'IsSqlClrEnabled' } | 
