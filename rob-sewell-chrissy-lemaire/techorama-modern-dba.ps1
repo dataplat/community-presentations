@@ -178,7 +178,7 @@ $allservers | Get-DbaSqlBuildReference | Format-Table
 Test-DbaIdentityUsage -SqlInstance $instance | Out-GridView
 
 # Execution plan export
-Get-DbaExecutionPlan -SqlInstance $instance | Export-DbaExecutionPlan -Path C:\temp
+Get-DbaExecutionPlan -SqlInstance $instance -Database ReportServer | Export-DbaExecutionPlan -Path C:\temp
 
 # OGV madness
 Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -NetworkShare \\workstation\c$\temp
