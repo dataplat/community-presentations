@@ -140,7 +140,7 @@ Find-DbaOrphanedFile -SqlInstance $instance
 Find-DbaOrphanedFile -SqlInstance $instance -RemoteOnly | Remove-Item -Whatif
 
 # Reset-SqlAdmin
-Reset-SqlAdmin -SqlInstance $instance -Login sqladmin
+Reset-SqlAdmin -SqlInstance $instance -Login sqladmin -Verbose
 
 #endregion
 
