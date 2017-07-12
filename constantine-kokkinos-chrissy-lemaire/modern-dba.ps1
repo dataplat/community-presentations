@@ -19,14 +19,13 @@ $allservers = $old, $new
 
 #region backuprestore
 
-Start-Process https://dbatools.io/snowball
-
 # standard
 Restore-DbaDatabase -SqlInstance $instance -Path "C:\temp\AdventureWorks2012-Full Database Backup.bak"
 Restore-DbaDatabase -SqlInstance $instance -Path "C:\temp\AdventureWorks2012-Full Database Backup.bak" -WithReplace
 
 # ola!
 Invoke-Item \\workstation\backups\WORKSTATION\SharePoint_Config
+Invoke-Item \\workstation\backups\sql2012 
 Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance $new
 
 # What about backups?
@@ -36,50 +35,49 @@ Get-DbaDatabase -SqlInstance $instance -Database SharePoint_Config | Backup-DbaD
 Get-DbaBackupHistory -SqlInstance $instance -Database AdventureWorks2012, SharePoint_Config | Out-GridView
 
 # backup header
-Read-DbaBackupHeader -SqlInstance $instance -Path "\\workstation\backups\WORKSTATION\SharePoint_Config\FULL\WORKSTATION_SharePoint_Config_FULL_20170114_224317.bak" | SELECT ServerName, DatabaseName, UserName, BackupFinishDate, SqlVersion, BackupSizeMB
+$backup = "\\workstation\backups\WORKSTATION\SharePoint_Config\FULL\WORKSTATION_SharePoint_Config_FULL_20170114_224317.bak"
+Read-DbaBackupHeader -SqlInstance $instance -Path $backup | Select ServerName, DatabaseName, UserName, BackupFinishDate, SqlVersion, BackupSizeMB
 
 #endregion
 
-# Find it!
-Find-DbaCommand -Tag Backup
-Start-Process https://dbatools.io/command-search
-
+# Find it! - JSON file powers command and website
+Find-DbaCommand Backup
+Find-DbaCommand -Tag Backup | Out-GridView
 
 #region SPN
-Start-Process https://dbatools.io/schwifty
 Start-Process "C:\Program Files\Microsoft\Kerberos Configuration Manager for SQL Server\KerberosConfigMgr.exe"
 
-# oh this is tough - no domain
-Get-DbaSpn | Format-Table
-$allservers | Test-DbaSpn | Out-GridView -PassThru | Set-DbaSpn -Whatif
-Get-DbaSpn | Remove-DbaSpn -Whatif
+# No domain - let's watch a video!
+
+$servers | Test-DbaSpn | Out-GridView -PassThru | Set-DbaSpn -WhatIf
+Start-Process "C:\github\community-presentations\constantine-kokkinos-chrissy-lemaire\spn.mp4"
 
 #endregion
 
-# region cleanup real quick
-# Get-DbaDatabase -SqlInstance $new -NoSystemDb | Remove-DbaDatabase
-# end region
-
-#region holiday
+#region holiday/vacation
 # Get-DbaLastBackup - by @powerdbaklaas
 $allservers | Get-DbaLastBackup | Out-GridView
-$allservers | Get-DbaLastBackup | Where-Object LastFullBackup -eq $null | Format-Table -AutoSize
-$allservers | Get-DbaLastBackup | Where-Object { $_.SinceLog -gt '00:15:00' -and $_.RecoveryModel -ne 'Simple' -and $_.Database -ne 'model' } | Select Server, Database, SinceFull, DatabaseCreated | Out-GridView
+$allservers | Get-DbaLastBackup | Where-Object LastFullBackup -eq $null | Out-GridView
+
+$allservers | Get-DbaLastBackup | 
+    Where-Object { $_.SinceLog -gt '00:15:00' -and $_.RecoveryModel -ne 'Simple' -and $_.Database -ne 'model' } | 
+    Select-Object Server, Database, SinceFull, DatabaseCreated | Out-GridView
 
 # LastGoodCheckDb - by @jagoop
-$checkdbs = Get-DbaLastGoodCheckDb -SqlInstance $instance
-$checkdbs
-$checkdbs | Where LastGoodCheckDb -eq $null
-$checkdbs | Where LastGoodCheckDb -lt (Get-Date).AddDays(-1)
+Get-DbaLastGoodCheckDb -SqlInstance $instance | Out-GridView
+Get-DbaLastGoodCheckDb -SqlInstance $instance | Where LastGoodCheckDb -eq $null
+Get-DbaLastGoodCheckDb -SqlInstance $instance | Where LastGoodCheckDb -lt (Get-Date).AddDays(-1)
 
 # Disk Space - by a bunch of us
 Get-DbaDiskSpace -SqlInstance $allservers
-$diskspace = Get-DbaDiskSpace -SqlInstance $allservers -Detailed
+$diskspace = Get-DbaDiskSpace -SqlInstance $allservers -Detailed | Out-GridView
 $diskspace | Where PercentFree -lt 20
 
 #endregion
 
 #region testing backups
+Remove-DbaDatabase -SqlInstance $old -Database AdventureWorks2008R2, AdventureWorks2012
+
 
 # Did you see? SqlServer module is now in the Powershell Gallery too!
 Get-Help Test-DbaLastBackup -Online
@@ -114,9 +112,6 @@ Set-DbaMaxMemory -SqlInstance $instance -MaxMb 2048
 Test-DbaFullRecoveryModel -SqlInstance $instance
 Test-DbaFullRecoveryModel -SqlInstance $instance | Where { $_.ConfiguredRecoveryModel -ne $_.ActualRecoveryModel }
 
-# Restore History!
-Get-DbaRestoreHistory -SqlInstance $instance | Out-GridView
-
 # Testing sql server larock
 Test-DbaLinkedServerConnection -SqlInstance $instance
 
@@ -135,9 +130,9 @@ $allservers | Find-DbaStoredProcedure -Pattern dbatools | Select * | Out-GridVie
 $allservers | Find-DbaStoredProcedure -Pattern '\w+@\w+\.\w+'
 
 # Remove dat orphan - by @sqlstad
-Find-DbaOrphanedFile -SqlInstance $instance
-((Find-DbaOrphanedFile -SqlInstance $instance -RemoteOnly | Get-ChildItem | Select -ExpandProperty Length | Measure-Object -Sum)).Sum / 1MB
-Find-DbaOrphanedFile -SqlInstance $instance -RemoteOnly | Remove-Item -Whatif
+Find-DbaOrphanedFile -SqlInstance $instance | Out-GridView
+((Find-DbaOrphanedFile -SqlInstance $instance -LocalOnly | Get-ChildItem | Select -ExpandProperty Length | Measure-Object -Sum)).Sum / 1MB
+Find-DbaOrphanedFile -SqlInstance $instance -LocalOnly | Remove-Item -Whatif
 
 # Reset-SqlAdmin
 Reset-SqlAdmin -SqlInstance $instance -Login sqladmin -Verbose
