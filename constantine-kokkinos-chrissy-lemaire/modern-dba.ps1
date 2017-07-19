@@ -29,7 +29,7 @@ Invoke-Item \\workstation\backups\sql2012
 Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance $new
 
 # What about backups?
-Get-DbaDatabase -SqlInstance $instance -Database SharePoint_Config | Backup-DbaDatabase -BackupDirectory C:\temp -NoCopyOnly
+Get-DbaDatabase -SqlInstance $instance -Database SharePoint_Config | Backup-DbaDatabase -BackupDirectory C:\temp
 
 # history
 Get-DbaBackupHistory -SqlInstance $instance -Database AdventureWorks2012, SharePoint_Config | Out-GridView
@@ -92,8 +92,8 @@ Test-DbaLastBackup -SqlInstance $old -Destination $new -VerifyOnly | Out-GridVie
 #region databasespace
 
 # Get Db Free Space AND write it to disk
-Get-DbaDatabaseFreespace -SqlInstance $instance
-Get-DbaDatabaseFreespace -SqlInstance $instance -IncludeSystemDB | Out-DbaDataTable | Write-DbaDataTable -SqlInstance $instance -Database tempdb -Table DiskSpaceExample -AutoCreateTable
+Get-DbaDatabaseSpace -SqlInstance $instance
+Get-DbaDatabaseSpace -SqlInstance $instance -IncludeSystemDB | Out-DbaDataTable | Write-DbaDataTable -SqlInstance $instance -Database tempdb -Table DiskSpaceExample -AutoCreateTable
 
 # Run a lil query
 Ssms.exe "C:\temp\tempdbquery.sql"
@@ -125,9 +125,10 @@ $allservers | Test-DbaVirtualLogFile | Where-Object {$_.Count -ge 50} | Sort-Obj
 # Find-DbaStoredProcdure - @claudioessilva, @cl, Stephen Bennett
 # 37,545 SQL Server stored procedures on 9 servers evaluated in 8.67 seconds!
 
-$allservers | Find-DbaStoredProcedure -Pattern dbatools
-$allservers | Find-DbaStoredProcedure -Pattern dbatools | Select * | Out-GridView
-$allservers | Find-DbaStoredProcedure -Pattern '\w+@\w+\.\w+'
+$new | Get-DbaDatabase -ExcludeDatabase anotherdb -NoSystemDb | Remove-DbaDatabase | Out-Null
+$new | Find-DbaStoredProcedure -Pattern dbatools
+$new | Find-DbaStoredProcedure -Pattern dbatools | Select * | Out-GridView
+$new | Find-DbaStoredProcedure -Pattern '\w+@\w+\.\w+'
 
 # Remove dat orphan - by @sqlstad
 Find-DbaOrphanedFile -SqlInstance $instance | Out-GridView
@@ -164,7 +165,7 @@ Get-DbaDatabase -SqlInstance $old | Export-DbaScript
 $options = New-DbaScriptingOption
 $options.ScriptDrops = $false
 $options.WithDependencies = $true
-Get-DbaAgentJob -SqlInstance $old | Export-DbaScript -ScriptingOptionObject $options
+Get-DbaAgentJob -SqlInstance $old | Export-DbaScript -ScriptingOptionsObject $options
 
 # Build ref!
 $allservers | Get-DbaSqlBuildReference | Format-Table
