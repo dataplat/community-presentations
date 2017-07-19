@@ -49,7 +49,7 @@ Start-Process "C:\Program Files\Microsoft\Kerberos Configuration Manager for SQL
 
 # No domain - let's watch a video!
 
-$servers | Test-DbaSpn | Out-GridView -PassThru | Set-DbaSpn -WhatIf
+$servers | Test-DbaSpn | Out-GridView -PassThru | Set-DbaSpn #-WhatIf
 Start-Process "C:\github\community-presentations\constantine-kokkinos-chrissy-lemaire\spn.mp4"
 
 #endregion
