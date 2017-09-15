@@ -31,38 +31,18 @@ Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -Sq
 # What about backups?
 Get-DbaDatabase -SqlInstance $instance -Database SharePoint_Config | Backup-DbaDatabase -BackupDirectory C:\temp
 
-
-
 # Did you see? SqlServer module is now in the Powershell Gallery too!
 Get-Help Test-DbaLastBackup -Online
 Import-Module SqlServer
 Invoke-Item (Get-Item SQLSERVER:\SQL\$instance\DEFAULT).DefaultFile
 
-Test-DbaLastBackup -SqlInstance $instance | Out-GridView
-Test-DbaLastBackup -SqlInstance $old -Destination $new -VerifyOnly | Out-GridView
+Test-DbaLastBackup -SqlInstance $instance -Destination $new -Database model, msdb | Out-GridView
 
 #endregion
 
 
-#region mindblown
-
-# Find-DbaStoredProcdure - @claudioessilva, @cl, Stephen Bennett
-# 37,545 SQL Server stored procedures on 9 servers evaluated in 8.67 seconds!
-
-$new | Get-DbaDatabase -ExcludeDatabase anotherdb -NoSystemDb | Remove-DbaDatabase | Out-Null
-$new | Find-DbaStoredProcedure -Pattern dbatools
-$new | Find-DbaStoredProcedure -Pattern dbatools | Select * | Out-GridView
-$new | Find-DbaStoredProcedure -Pattern '\w+@\w+\.\w+'
-
-# Remove dat orphan - by @sqlstad
-Find-DbaOrphanedFile -SqlInstance $instance | Out-GridView
-((Find-DbaOrphanedFile -SqlInstance $instance -LocalOnly | Get-ChildItem | Select -ExpandProperty Length | Measure-Object -Sum)).Sum / 1MB
-Find-DbaOrphanedFile -SqlInstance $instance -LocalOnly | Remove-Item -Whatif
-
-# Reset-SqlAdmin
-Reset-SqlAdmin -SqlInstance $instance -Login sqladmin -Verbose
-
-#endregion
+# Exports
+Export-DbaLogin
 
 # Exports
 Get-DbaDatabase -SqlInstance $old | Export-DbaScript
@@ -71,23 +51,30 @@ $options.ScriptDrops = $false
 $options.WithDependencies = $true
 Get-DbaAgentJob -SqlInstance $old | Export-DbaScript -ScriptingOptionsObject $options
 
+# Reset-SqlAdmin
+Reset-SqlAdmin -SqlInstance $instance -Login sqladmin -Verbose
+
 # Build ref!
 $allservers | Get-DbaSqlBuildReference | Format-Table
 
-# Identity usage
-Test-DbaIdentityUsage -SqlInstance $instance | Out-GridView
+# 
+Get-DbaSqlModule -SqlInstance $instance -ModifiedSince (Get-Date).AddDays(-7) | Select-String -Pattern sp_executesql
 
-# Execution plan export
-Get-DbaExecutionPlan -SqlInstance $instance -Database ReportServer | Export-DbaExecutionPlan -Path C:\temp
+# 
+Read-DbaTraceFile -SqlInstance $instance | Out-GridView
+Get-DbaFile -SqlInstance $instance
 
-# OGV madness
-Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -NetworkShare \\workstation\c$\temp
+# Network Encryption
+# - Requires a certificate with DNS names (complex)
+# - Requires specific properties in the certificate
+# - Requires that the service account have read access to the private key
+# - Clusters cannot be configured via the SQL Configuration Manager
 
-#
-Get-DbaSqlModule -ModifiedSince (Get-Date).AddDays(-1) | Select-String -Pattern sp_executesql
-Export-DbaLogin
-Read-DbaTraceFile
-Get-DbaFile
+Start-Process "C:\github\community-presentations\rob-sewell-chrissy-lemaire\pssaturday-security-dev-edition-forcednetwork.mp4"
+
+#endregion
+
+# 
 Get-DbaSchemaChangeHistory
 Get-DbaProcess
 Get-DbaAgentJobHistory
@@ -105,6 +92,23 @@ $servers | Test-DbaSpn | Out-GridView -PassThru | Set-DbaSpn #-WhatIf
 Start-Process "C:\github\community-presentations\constantine-kokkinos-chrissy-lemaire\spn.mp4"
 
 #endregion
+
+
+# Find-DbaStoredProcdure - @claudioessilva, @cl, Stephen Bennett
+# 37,545 SQL Server stored procedures on 9 servers evaluated in 8.67 seconds!
+
+$new | Get-DbaDatabase -ExcludeDatabase anotherdb -NoSystemDb | Remove-DbaDatabase | Out-Null
+$new | Find-DbaStoredProcedure -Pattern dbatools
+$new | Find-DbaStoredProcedure -Pattern dbatools | Select * | Out-GridView
+$new | Find-DbaStoredProcedure -Pattern '\w+@\w+\.\w+'
+
+# Remove dat orphan - by @sqlstad
+Find-DbaOrphanedFile -SqlInstance $instance | Out-GridView
+((Find-DbaOrphanedFile -SqlInstance $instance -LocalOnly | Get-ChildItem | Select -ExpandProperty Length | Measure-Object -Sum)).Sum / 1MB
+Find-DbaOrphanedFile -SqlInstance $instance -LocalOnly | Remove-Item -Whatif
+
+# OGV madness
+Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -NetworkShare \\workstation\c$\temp -Force
 
 # Find it! - JSON file powers command and website
 Find-DbaCommand Backup
