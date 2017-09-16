@@ -42,7 +42,7 @@ Test-DbaLastBackup -SqlInstance $instance -Destination $new -Database model, msd
 
 
 # Exports
-Export-DbaLogin
+Export-DbaLogin -SqlInstance $instance -FilePath C:\temp\logins.sql
 
 # Exports
 Get-DbaDatabase -SqlInstance $old | Export-DbaScript
@@ -57,12 +57,16 @@ Reset-SqlAdmin -SqlInstance $instance -Login sqladmin -Verbose
 # Build ref!
 $allservers | Get-DbaSqlBuildReference | Format-Table
 
-# 
+# SQL Modules - View, TableValuedFunction, DefaultConstraint, StoredProcedure, Rule, InlineTableValuedFunction, Trigger, ScalarFunction
+Get-DbaSqlModule -SqlInstance $instance -ModifiedSince (Get-Date).AddDays(-7) | Out-GridView
 Get-DbaSqlModule -SqlInstance $instance -ModifiedSince (Get-Date).AddDays(-7) | Select-String -Pattern sp_executesql
 
-# 
+# Reads trace files - default trace by default
 Read-DbaTraceFile -SqlInstance $instance | Out-GridView
+
+# Uses xp_dirtree
 Get-DbaFile -SqlInstance $instance
+Get-DbaFile -SqlInstance $instance -Path C:\temp
 
 # Network Encryption
 # - Requires a certificate with DNS names (complex)
@@ -72,23 +76,21 @@ Get-DbaFile -SqlInstance $instance
 
 Start-Process "C:\github\community-presentations\rob-sewell-chrissy-lemaire\pssaturday-security-dev-edition-forcednetwork.mp4"
 
-#endregion
 
 # 
 Get-DbaSchemaChangeHistory
-Get-DbaProcess
-Get-DbaAgentJobHistory
-Get-DbaServerProtocol
-Get-DbaSpConfigure
-Get-DbaSqlRegistryRoot
-Get-DbaForceNetworkEncryption
+Get-DbaProcess -SqlInstance $instance
+Get-DbaAgentJobHistory -SqlInstance $instance | Out-GridView
+Get-DbaServerProtocol -ComputerName $instance | Out-GridView
+Get-DbaSpConfigure -SqlInstance $instance | Out-GridView
+Get-DbaSqlRegistryRoot -ComputerName $instance
 
 #region SPN
 Start-Process "C:\Program Files\Microsoft\Kerberos Configuration Manager for SQL Server\KerberosConfigMgr.exe"
 
 # No domain - let's watch a video!
 
-$servers | Test-DbaSpn | Out-GridView -PassThru | Set-DbaSpn #-WhatIf
+$servers | Test-DbaSpn | Out-GridView -PassThru | Set-DbaSpn -WhatIf
 Start-Process "C:\github\community-presentations\constantine-kokkinos-chrissy-lemaire\spn.mp4"
 
 #endregion
@@ -113,3 +115,7 @@ Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -D
 # Find it! - JSON file powers command and website
 Find-DbaCommand Backup
 Find-DbaCommand -Tag Backup | Out-GridView
+
+# Thanks, Fred! 
+[dbainstance]"sql2016"
+[dbainstance]"sqlcluster\sharepoint"
