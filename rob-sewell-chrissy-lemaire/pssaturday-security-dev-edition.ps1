@@ -43,6 +43,7 @@ Test-DbaLastBackup -SqlInstance $instance -Destination $new -Database model, msd
 
 # Exports
 Export-DbaLogin -SqlInstance $instance -Path C:\temp\logins.sql
+Invoke-Item C:\temp\logins.sql
 
 # Other Exports
 Get-DbaAgentJob -SqlInstance $old | Export-DbaScript -Path C:\temp\jobs.sql
@@ -71,7 +72,6 @@ Get-DbaFile -SqlInstance $instance -Path C:\temp
 # - Clusters cannot be configured via the SQL Configuration Manager
 
 Start-Process "C:\github\community-presentations\rob-sewell-chrissy-lemaire\pssaturday-security-dev-edition-forcednetwork.mp4"
-
 
 # Schema change!
 $db = Get-DbaDatabase -SqlInstance $new -Database tempdb
