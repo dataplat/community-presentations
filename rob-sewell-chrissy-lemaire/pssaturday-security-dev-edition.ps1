@@ -79,6 +79,10 @@ $db.Query("CREATE TABLE dbatoolsci_schemachange (id int identity)")
 $db.Query("EXEC sp_rename 'dbatoolsci_schemachange', 'dbatoolsci_schemachange_new'")
 Get-DbaSchemaChangeHistory -SqlInstance $new
 
+# Tests!
+C:\github\dbatools\tests\Get-DbaSchemaChangeHistory.Tests.ps1
+Invoke-Item C:\github\dbatools\tests
+
 # Process exploration
 Get-DbaProcess -SqlInstance $instance
 
