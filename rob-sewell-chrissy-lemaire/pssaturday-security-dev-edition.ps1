@@ -42,14 +42,10 @@ Test-DbaLastBackup -SqlInstance $instance -Destination $new -Database model, msd
 
 
 # Exports
-Export-DbaLogin -SqlInstance $instance -FilePath C:\temp\logins.sql
+Export-DbaLogin -SqlInstance $instance -Path C:\temp\logins.sql
 
-# Exports
-Get-DbaDatabase -SqlInstance $old | Export-DbaScript
-$options = New-DbaScriptingOption
-$options.ScriptDrops = $false
-$options.WithDependencies = $true
-Get-DbaAgentJob -SqlInstance $old | Export-DbaScript -ScriptingOptionsObject $options
+# Other Exports
+Get-DbaAgentJob -SqlInstance $old | Export-DbaScript -Path C:\temp\jobs.sql
 
 # Reset-SqlAdmin
 Reset-SqlAdmin -SqlInstance $instance -Login sqladmin -Verbose
@@ -77,12 +73,25 @@ Get-DbaFile -SqlInstance $instance -Path C:\temp
 Start-Process "C:\github\community-presentations\rob-sewell-chrissy-lemaire\pssaturday-security-dev-edition-forcednetwork.mp4"
 
 
-# 
-Get-DbaSchemaChangeHistory
+# Schema change!
+$db = Get-DbaDatabase -SqlInstance $new -Database tempdb
+$db.Query("CREATE TABLE dbatoolsci_schemachange (id int identity)")
+$db.Query("EXEC sp_rename 'dbatoolsci_schemachange', 'dbatoolsci_schemachange_new'")
+Get-DbaSchemaChangeHistory -SqlInstance $new
+
+# Process exploration
 Get-DbaProcess -SqlInstance $instance
+
+# More histories
 Get-DbaAgentJobHistory -SqlInstance $instance | Out-GridView
+
+# See protocols
 Get-DbaServerProtocol -ComputerName $instance | Out-GridView
+
+# In-depth spconfigure
 Get-DbaSpConfigure -SqlInstance $instance | Out-GridView
+
+# Get the registry root
 Get-DbaSqlRegistryRoot -ComputerName $instance
 
 #region SPN
