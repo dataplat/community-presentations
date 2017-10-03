@@ -17,6 +17,9 @@ $new = "localhost\sql2016"
 $old = $instance = "localhost"
 $allservers = $old, $new
 
+# db space
+Get-DbaDatabaseSpace -SqlInstance $new -IncludeSystemDBs | Out-GridView
+
 #region backuprestore
 
 # standard
@@ -36,7 +39,7 @@ Get-Help Test-DbaLastBackup -Online
 Import-Module SqlServer
 Invoke-Item (Get-Item SQLSERVER:\SQL\$instance\DEFAULT).DefaultFile
 
-Test-DbaLastBackup -SqlInstance $instance -Destination $new -Database model, msdb | Out-GridView
+Test-DbaLastBackup -SqlInstance $instance -Destination $new | Out-GridView
 
 #endregion
 
@@ -74,6 +77,15 @@ Get-DbaFile -SqlInstance $instance -Path C:\temp -Depth 2
 
 Start-Process "C:\github\community-presentations\rob-sewell-chrissy-lemaire\belgium-forcednetwork.mp4"
 
+# Find failed jobs - just thought of this today so nothing has failed
+$allservers | Find-DbaAgentJob -IsFailed | Start-DbaAgentJob
+$allservers | Get-DbaAgentJob
+$allservers | Get-DbaAgentJob | Out-Gridview -PassThru | Start-DbaAgentJob
+$allservers | Get-DbaRunningJob
+
+# History
+Get-Command -Module dbatools *history*
+
 # Schema change!
 $db = Get-DbaDatabase -SqlInstance $new -Database tempdb
 $db.Query("CREATE TABLE dbatoolsci_schemachange (id int identity)")
@@ -82,7 +94,7 @@ Get-DbaSchemaChangeHistory -SqlInstance $new
 $db.Query("DROP TABLE dbatoolsci_schemachange_new")
 
 # Tests!
-C:\github\dbatools\tests\Get-DbaSchemaChangeHistory.Tests.ps1
+invoke-item C:\github\dbatools\tests\Get-DbaSchemaChangeHistory.Tests.ps1
 Invoke-Item C:\github\dbatools\tests
 
 # Database clone
@@ -137,6 +149,7 @@ Find-DbaCommand -Tag Backup | Out-GridView
 [dbainstance]"sqlcluster\sharepoint"
 
 # Coming soon, more on Xevents!
+Get-DbaXEventSession -SqlInstance $new
 Get-DbaXEventSession -SqlInstance $new -Session system_health | Read-DbaXEventFile
 Get-DbaXEventSession -SqlInstance $new -Session system_health | Watch-DbaXEventSession | Select -ExpandProperty Fields
 
