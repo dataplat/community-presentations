@@ -31,7 +31,7 @@ $allservers | Test-DbaNetworkLatency | Out-GridView
 
 # standard
 Restore-DbaDatabase -SqlInstance $instance -Path "C:\temp\backups\dbatoolsci_singlerestore_201710010039.bak"
-Restore-DbaDatabase -SqlInstance $instance -Path "C:\temp\AdventureWorks2012-Full Database Backup.bak" -WithReplace
+Restore-DbaDatabase -SqlInstance $instance -Path "C:\temp\backups\dbatoolsci_singlerestore_201710010039.bak" -WithReplace
 
 # ola!
 Invoke-Item \\nas\sql\SQL2012\WSS_Content
