@@ -151,7 +151,7 @@ Invoke-Item $home
 $instance | Install-DbaMaintenanceSolution -ReplaceExisting -BackupLocation C:\temp -InstallJobs
 
 # Find user owned objects
-Find-DbaUserObject -SqlInstance $instance -Pattern sa
+Find-DbaUserObject -SqlInstance $instance -Pattern workstation\loulou
 
 # Startup parameters
 Get-DbaStartupParameter -SqlInstance $instance
@@ -194,7 +194,6 @@ Set-DbaMaxMemory -SqlInstance $instance -MaxMb 1023
 # RecoveryModel
 Test-DbaFullRecoveryModel -SqlInstance $new
 Test-DbaFullRecoveryModel -SqlInstance $new | Where { $_.ConfiguredRecoveryModel -ne $_.ActualRecoveryModel }
-
 
 # Testing sql server linked server connections
 Test-DbaLinkedServerConnection -SqlInstance $instance
