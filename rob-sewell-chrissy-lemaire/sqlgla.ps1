@@ -54,6 +54,19 @@ Invoke-Item C:\temp\logins.sql
 # Other Exports
 Get-DbaAgentJob -SqlInstance $old | Export-DbaScript -Path C:\temp\jobs.sql
 
+# Surprise beard! Perform a beautiful migration
+$startDbaMigrationSplat = @{
+	Source = $old
+	Destination = $new
+	BackupRestore = $true
+    NetworkShare = 'C:\temp'
+    NoSysDbUserObjects = $true
+    NoCredential = $true
+    NoBackupDevice = $true	
+}
+		
+Start-DbaMigration @startDbaMigrationSplat -Force | Select * | Out-GridView
+
 # Snapshots!
 New-DbaDatabaseSnapshot -SqlInstance $new -Database db1 -Name db1_snapshot
 Get-DbaDatabaseSnapshot -SqlInstance $new
