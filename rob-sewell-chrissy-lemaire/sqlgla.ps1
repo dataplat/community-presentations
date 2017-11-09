@@ -91,7 +91,15 @@ $new | Find-DbaStoredProcedure -Pattern dbatools | Select * | Out-GridView
 $new | Find-DbaStoredProcedure -Pattern '\w+@\w+\.\w+'
 
 # Find user owned objects
-Find-DbaUserObject -SqlInstance $instance -Pattern sa
+Find-DbaUserObject -SqlInstance $instance -Pattern workstation\loulou
+
+# Find detached databases
+Detach-DbaDatabase -SqlInstance $instance -Database AdventureWorks2012
+Find-DbaOrphanedFile -SqlInstance $instance | Out-GridView
+
+# Find it! - JSON file powers command and website
+Find-DbaCommand Backup
+Find-DbaCommand -Tag Backup | Out-GridView
 
 # View and change service account
 Get-DbaSqlService -ComputerName workstation | Out-GridView
@@ -116,10 +124,6 @@ $session | Start-DbaXESession
 # Read and watch
 Get-DbaXEventSession -SqlInstance $new -Session system_health | Read-DbaXEventFile
 Get-DbaXEventSession -SqlInstance $new -Session system_health | Read-DbaXEventFile | Select -ExpandProperty Fields | Out-GridView
-
-<#
-    Get-DbaXEventSession -SqlInstance $new -Session system_health | Watch-DbaXEventSession | Select -ExpandProperty Fields
-#>
 
 Invoke-Item C:\github\community-presentations\rob-sewell-chrissy-lemaire\watch-xeventsession.png
 
@@ -149,9 +153,6 @@ Invoke-Item $home
 
 # Ola, yall
 $instance | Install-DbaMaintenanceSolution -ReplaceExisting -BackupLocation C:\temp -InstallJobs
-
-# Find user owned objects
-Find-DbaUserObject -SqlInstance $instance -Pattern workstation\loulou
 
 # Startup parameters
 Get-DbaStartupParameter -SqlInstance $instance
@@ -240,10 +241,6 @@ Start-Process "C:\github\community-presentations\rob-sewell-chrissy-lemaire\spn.
 
 # OGV madness
 Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -NetworkShare \\workstation\c$\temp -Force
-
-# Find it! - JSON file powers command and website
-Find-DbaCommand Backup
-Find-DbaCommand -Tag Backup | Out-GridView
 
 # Log Files
 Get-DbaDbVirtualLogFile -SqlInstance $new -Database db1
