@@ -17,6 +17,9 @@ $new = "localhost\sql2016"
 $old = $instance = "localhost"
 $allservers = $old, $new
 
+# Alternatively, use Registerd Servers? 
+$allservers = Get-DbaRegisteredServer -SqlInstance sqlcms
+
 # Quick overview of commands
 Start-Process https://dbatools.io/commands
 
@@ -40,12 +43,9 @@ Get-DbaDatabase -SqlInstance $new | Backup-DbaDatabase
 # Did you see? SqlServer module is now in the Powershell Gallery too!
 Get-Help Test-DbaLastBackup -Online
 Import-Module SqlServer
-Invoke-Item (Get-Item SQLSERVER:\SQL\$instance\DEFAULT).DefaultFile
+Invoke-Item (Get-Item SQLSERVER:\SQL\WORKSTATION\SQL2016).DefaultFile
 
 Test-DbaLastBackup -SqlInstance $new | Out-GridView
-
-# db space
-Get-DbaDatabaseSpace -SqlInstance $new -IncludeSystemDBs | Out-GridView
 
 # Exports
 Export-DbaLogin -SqlInstance $instance -Path C:\temp\logins.sql
@@ -65,20 +65,25 @@ Remove-DbaDatabaseSnapshot -SqlInstance $new -Snapshot db1_snapshot # or -Databa
 $old | Get-DbaLastGoodCheckDb | Out-GridView
 $old | Get-DbaAgentJob | Where Name -match integrity | Start-DbaAgentJob
 $old | Get-DbaRunningJob
-$old | Get-DbaLastGoodCheckDb
+$old | Get-DbaLastGoodCheckDb | Out-GridView
 
 # build info!
 Start-Process https://dbatools.io/builds
 $allservers | Get-DbaSqlBuildReference
-
-# Registered Server
-$allservers | Get-DbaRegisteredServer | Out-GridView
 
 # Find-DbaStoredProcdure - @claudioessilva, @cl, Stephen Bennett
 # 37,545 SQL Server stored procedures on 9 servers evaluated in 8.67 seconds!
 $new | Find-DbaStoredProcedure -Pattern dbatools
 $new | Find-DbaStoredProcedure -Pattern dbatools | Select * | Out-GridView
 $new | Find-DbaStoredProcedure -Pattern '\w+@\w+\.\w+'
+
+# Find user owned objects
+Find-DbaUserObject -SqlInstance $instance -Pattern sa
+
+# View and change service account
+Get-DbaSqlService -ComputerName workstation | Out-GridView
+Get-DbaSqlService -ComputerName workstation | Select * | Out-GridView
+Get-DbaSqlService -Instance SQL2016 -Type Agent | Update-DbaSqlServiceAccount -Username 'Local system'
 
 # Spconfigure
 Get-DbaSpConfigure -SqlInstance $new | Out-GridView
@@ -97,7 +102,7 @@ $session | Start-DbaXESession
 
 # Read and watch
 Get-DbaXEventSession -SqlInstance $new -Session system_health | Read-DbaXEventFile
-Get-DbaXEventSession -SqlInstance $new -Session system_health | Read-DbaXEventFile | Select -ExpandProperty Fields
+Get-DbaXEventSession -SqlInstance $new -Session system_health | Read-DbaXEventFile | Select -ExpandProperty Fields | Out-GridView
 
 <#
     Get-DbaXEventSession -SqlInstance $new -Session system_health | Watch-DbaXEventSession | Select -ExpandProperty Fields
@@ -105,46 +110,9 @@ Get-DbaXEventSession -SqlInstance $new -Session system_health | Read-DbaXEventFi
 
 Invoke-Item C:\github\community-presentations\rob-sewell-chrissy-lemaire\watch-xeventsession.png
 
-# Log Files
-Get-DbaDbVirtualLogFile -SqlInstance $new -Database db1
-
 # Reset-DbaAdmin
 Reset-DbaAdmin -SqlInstance $instance -Login sqladmin -Verbose
-
-# SQL Modules - View, TableValuedFunction, DefaultConstraint, StoredProcedure, Rule, InlineTableValuedFunction, Trigger, ScalarFunction
-Get-DbaSqlModule -SqlInstance $instance | Out-GridView
-Get-DbaSqlModule -SqlInstance $instance -ModifiedSince (Get-Date).AddDays(-7) | Select-String -Pattern sp_executesql
-
-# Reads trace files - default trace by default
-Read-DbaTraceFile -SqlInstance $instance | Out-GridView
-
-# Find failed jobs
-$allservers | Find-DbaAgentJob -IsFailed | Start-DbaAgentJob
-$allservers | Get-DbaAgentJob
-$allservers | Get-DbaAgentJob | Out-Gridview -PassThru | Start-DbaAgentJob
-$allservers | Get-DbaRunningJob
-
-
-# don't have remoting access? Explore the filesystem. Uses master.sys.xp_dirtree
-Get-DbaFile -SqlInstance $instance -Depth 3 -Path 'C:\Program Files\Microsoft SQL Server' | Out-GridView
-New-DbaSqlDirectory -SqlInstance $instance  -Path 'C:\Program Files\Microsoft SQL Server\MSSQL14.MSSQLSERVER\test'
-
-# Database clone
-Invoke-DbaDatabaseClone -SqlInstance $new -Database dbwithsprocs -CloneDatabase dbwithsprocs_clone
-
-# Schema change!
-Invoke-Sqlcmd2 -SqlInstance $new -Database tempdb -Query "CREATE TABLE dbatoolsci_schemachange (id int identity)"
-Invoke-Sqlcmd2 -SqlInstance $new -Database tempdb -Query "EXEC sp_rename 'dbatoolsci_schemachange', 'dbatoolsci_schemachange_new'"
-Get-DbaSchemaChangeHistory -SqlInstance $new -Database tempdb
-Invoke-Sqlcmd2 -SqlInstance $new -Database tempdb -Query "DROP TABLE dbatoolsci_schemachange_new"
-
-# History
-Get-Command -Module dbatools *history*
-
-# More histories
-Get-DbaAgentJobHistory -SqlInstance $instance | Out-GridView
-Get-DbaBackupHistory -SqlInstance $instance | Out-GridView
-Get-DbaDbMailHistory -SqlInstance $instance | Out-GridView
+Get-DbaDatabase -SqlInstance $instance -SqlCredential (Get-Credential sqladmin)
 
 # Configs and enterprise logging
 Get-DbaConfig | Out-GridView
@@ -156,11 +124,77 @@ Set-DbaConfig -Name tabexpansion.disable -Value $true
 Get-DbatoolsLog | Out-GridView
 New-DbatoolsSupportPackage
 
+# Community projects
+
+# sp_whoisactive
+Install-DbaWhoIsActive -SqlInstance $instance -Database master
+Invoke-DbaWhoIsActive -SqlInstance $instance -ShowOwnSpid -ShowSystemSpids
+
+# Diagnostic query!
+$instance | Invoke-DbaDiagnosticQuery -UseSelectionHelper | Export-DbaDiagnosticQuery -Path $home
+Invoke-Item $home
+
+# Ola, yall
+$instance | Install-DbaMaintenanceSolution -ReplaceExisting -BackupLocation C:\temp -InstallJobs
+
+# Find user owned objects
+Find-DbaUserObject -SqlInstance $instance -Pattern sa
+
+# Startup parameters
+Get-DbaStartupParameter -SqlInstance $instance
+Set-DbaStartupParameter -SqlInstance $instance -SingleUser -WhatIf
+
+# Database clone
+Invoke-DbaDatabaseClone -SqlInstance $new -Database dbwithsprocs -CloneDatabase dbwithsprocs_clone
+
+# Schema change and Pester tests
+Invoke-Sqlcmd2 -SqlInstance $new -Database tempdb -Query "CREATE TABLE dbatoolsci_schemachange (id int identity)"
+Invoke-Sqlcmd2 -SqlInstance $new -Database tempdb -Query "EXEC sp_rename 'dbatoolsci_schemachange', 'dbatoolsci_schemachange_new'"
+Get-DbaSchemaChangeHistory -SqlInstance $new -Database tempdb
+Invoke-Sqlcmd2 -SqlInstance $new -Database tempdb -Query "DROP TABLE dbatoolsci_schemachange_new"
+
+Invoke-Item C:\github\dbatools\tests\Get-DbaSchemaChangeHistory.Tests.ps1
+Start-Process https://dbatools.io/ci
+Invoke-Item C:\github\dbatools\tests
+
+# Get Db Free Space AND write it to table
+Get-DbaDatabaseSpace -SqlInstance $instance | Out-GridView
+Get-DbaDatabaseSpace -SqlInstance $instance -IncludeSystemDB | Out-DbaDataTable | Write-DbaDataTable -SqlInstance $instance -Database tempdb -Table DiskSpaceExample -AutoCreateTable
+Invoke-Sqlcmd2 -ServerInstance $instance -Database tempdb -Query 'SELECT * FROM dbo.DiskSpaceExample' | Out-GridView
+
+# History
+Get-Command -Module dbatools *history*
+
+# More histories
+Get-DbaAgentJobHistory -SqlInstance $instance | Out-GridView
+Get-DbaBackupHistory -SqlInstance $new | Out-GridView
+
+# Identity usage
+Test-DbaIdentityUsage -SqlInstance $instance | Out-GridView
+
+# Test/Set SQL max memory
+$allservers | Get-DbaMaxMemory
+$allservers | Test-DbaMaxMemory | Format-Table
+$allservers | Test-DbaMaxMemory | Where-Object { $_.SqlMaxMB -gt $_.TotalMB } | Set-DbaMaxMemory -WhatIf
+Set-DbaMaxMemory -SqlInstance $instance -MaxMb 1023
+
+# RecoveryModel
+Test-DbaFullRecoveryModel -SqlInstance $new
+Test-DbaFullRecoveryModel -SqlInstance $new | Where { $_.ConfiguredRecoveryModel -ne $_.ActualRecoveryModel }
+
+
+# Testing sql server linked server connections
+Test-DbaLinkedServerConnection -SqlInstance $instance
+
 # See protocols
 Get-DbaServerProtocol -ComputerName $instance | Out-GridView
 
-# In-depth spconfigure
-Get-DbaSpConfigure -SqlInstance $instance | Out-GridView
+# SQL Modules - View, TableValuedFunction, DefaultConstraint, StoredProcedure, Rule, InlineTableValuedFunction, Trigger, ScalarFunction
+Get-DbaSqlModule -SqlInstance $instance | Out-GridView
+Get-DbaSqlModule -SqlInstance $instance -ModifiedSince (Get-Date).AddDays(-7) | Select-String -Pattern sp_executesql
+
+# Reads trace files - default trace by default
+Read-DbaTraceFile -SqlInstance $instance | Out-GridView
 
 # Get the registry root
 Get-DbaSqlRegistryRoot -ComputerName $instance
@@ -168,6 +202,11 @@ Get-DbaSqlRegistryRoot -ComputerName $instance
 # Thanks, Fred! 
 [dbainstance]"sql2016"
 [dbainstance]"sqlcluster\sharepoint"
+
+
+# don't have remoting access? Explore the filesystem. Uses master.sys.xp_dirtree
+Get-DbaFile -SqlInstance $instance -Depth 3 -Path 'C:\Program Files\Microsoft SQL Server' | Out-GridView
+New-DbaSqlDirectory -SqlInstance $instance  -Path 'C:\Program Files\Microsoft SQL Server\MSSQL14.MSSQLSERVER\test'
 
 # Network Encryption
 # - Requires a certificate with DNS names (complex)
@@ -193,3 +232,7 @@ Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -D
 # Find it! - JSON file powers command and website
 Find-DbaCommand Backup
 Find-DbaCommand -Tag Backup | Out-GridView
+
+# Log Files
+Get-DbaDbVirtualLogFile -SqlInstance $new -Database db1
+Get-DbaDbVirtualLogFile -SqlInstance $new -Database db1 | Measure-Object
