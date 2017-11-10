@@ -18,7 +18,7 @@ $old = $instance = "localhost"
 $allservers = $old, $new
 
 # Alternatively, use Registerd Servers? 
-$allservers = Get-DbaRegisteredServer -SqlInstance sqlcms
+Get-DbaRegisteredServer -SqlInstance $instance | Out-GridView
 
 # Quick overview of commands
 Start-Process https://dbatools.io/commands
@@ -54,6 +54,10 @@ Invoke-Item C:\temp\logins.sql
 # Other Exports
 Get-DbaAgentJob -SqlInstance $old | Export-DbaScript -Path C:\temp\jobs.sql
 
+# What if you just want to script out your restore?
+Get-ChildItem -Directory \\workstation\backups\subset\ | Restore-DbaDatabase -SqlInstance $new -OutputScriptOnly -WithReplace | Out-File -Filepath c:\temp\restore.sql
+Invoke-Item c:\temp\restore.sql
+
 # Surprise beard! Perform a beautiful migration
 $startDbaMigrationSplat = @{
 	Source = $old
@@ -61,8 +65,9 @@ $startDbaMigrationSplat = @{
 	BackupRestore = $true
     NetworkShare = 'C:\temp'
     NoSysDbUserObjects = $true
-    NoCredential = $true
-    NoBackupDevice = $true	
+    NoCredentials = $true
+    NoBackupDevices = $true
+    NoEndPoints = $true
 }
 		
 Start-DbaMigration @startDbaMigrationSplat -Force | Select * | Out-GridView
@@ -91,8 +96,8 @@ $new | Find-DbaStoredProcedure -Pattern dbatools | Select * | Out-GridView
 $new | Find-DbaStoredProcedure -Pattern '\w+@\w+\.\w+'
 
 # Find user owned objects
-Find-DbaUserObject -SqlInstance $instance -Pattern workstation\loulou
-
+Find-DbaUserObject -SqlInstance $instance -Pattern workstation\loulou | Out-GridView
+ 
 # Find detached databases
 Detach-DbaDatabase -SqlInstance $instance -Database AdventureWorks2012
 Find-DbaOrphanedFile -SqlInstance $instance | Out-GridView
@@ -109,10 +114,13 @@ Get-DbaSqlService -Instance SQL2016 -Type Agent | Update-DbaSqlServiceAccount -U
 # Spconfigure
 Get-DbaSpConfigure -SqlInstance $new | Out-GridView
 Get-DbaSpConfigure -SqlInstance $new -ConfigName XPCmdShellEnabled
+# Need to add config value to output
 Set-DbaSpConfigure -SqlInstance $new -ConfigName XPCmdShellEnabled -Value $true
 
 # DB Cloning too!
-Invoke-DbaDatabaseClone -SqlInstance $new -Database db1 -CloneDatabase db1_clone
+Remove-Module sqlserver
+Remove-DbaDatabase -SqlInstance $new -Database db1_clone
+Invoke-DbaDatabaseClone -SqlInstance $new -Database db1 -CloneDatabase db1_clone | Out-GridView
 
 # XEvents - more coming soon, like easy replays on remote servers
 
@@ -216,7 +224,6 @@ Get-DbaSqlRegistryRoot -ComputerName $instance
 [dbainstance]"sql2016"
 [dbainstance]"sqlcluster\sharepoint"
 
-
 # don't have remoting access? Explore the filesystem. Uses master.sys.xp_dirtree
 Get-DbaFile -SqlInstance $instance -Depth 3 -Path 'C:\Program Files\Microsoft SQL Server' | Out-GridView
 New-DbaSqlDirectory -SqlInstance $instance  -Path 'C:\Program Files\Microsoft SQL Server\MSSQL14.MSSQLSERVER\test'
@@ -239,9 +246,9 @@ Start-Process "C:\github\community-presentations\rob-sewell-chrissy-lemaire\spn.
 
 #endregion
 
-# OGV madness
-Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -NetworkShare \\workstation\c$\temp -Force
-
 # Log Files
 Get-DbaDbVirtualLogFile -SqlInstance $new -Database db1
 Get-DbaDbVirtualLogFile -SqlInstance $new -Database db1 | Measure-Object
+
+# OGV madness
+Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -NetworkShare \\workstation\c$\temp -Force
