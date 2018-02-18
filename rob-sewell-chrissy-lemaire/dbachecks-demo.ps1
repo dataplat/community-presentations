@@ -6,13 +6,17 @@ Update-Module Pester -Force
 Import-Module Pester -Force
 
 
+
+
+
 # Do a check
 Invoke-DbcCheck -SqlInstance localhost\sql2017 -Checks SuspectPage, LastBackup
 
 
 # How do we know which checks exist and if we should specify SqlInstance or ComputerName?
 Get-DbcCheck | Out-GridView
-Get-DbcCheck -Pattern *disk*
+Get-DbcCheck *disk*
+Invoke-DbcCheck -SqlInstance localhost\sql2017 -Checks 
 
 
 # Make a server list
@@ -65,17 +69,7 @@ Send-DbcMailMessage -To clemaire@dbatools.io -From nobody@dbachecks.io -SmtpServ
 Set-DbcConfig -Name app.checkrepos -Value C:\temp\checks -Append
 
 
-##################################################################################
-#
-#                            Advanced Usage
-#
-##################################################################################
-
-
 # Set a global, persistent credential
 Set-DbcConfig -Name app.sqlcredential -Value (Get-Credential sqladmin)
 
-
-# Modify the underlying commands - skip the C: drive
-Set-Variable -Name PSDefaultParameterValues -Value @{ 'Get-DbaDiskSpace:ExcludeDrive' = 'C:\' } -Scope Global
-Invoke-DbcCheck -Check Storage
+# Questions!
