@@ -42,14 +42,15 @@ Invoke-Item c:\temp\restore.sql
 
 # Complaint: Already have a library of Profiler templates
 # Answer: Convert them instantly to Sessions (h/t Jonathan Kehayias)
-Get-DbaTrace -SqlInstance sql2014 | ConvertTo-DbaXESession | Start-DbaXESession
+Get-DbaTrace -SqlInstance $old | ConvertTo-DbaXESession | Start-DbaXESession
 
 # Easily import
-Get-DbaXESessionTemplate | Out-GridView -PassThru | Import-DbaXESessionTemplate -SqlInstance $servers | Start-DbaXESession
+Get-DbaXESessionTemplate | Out-GridView -PassThru | Import-DbaXESessionTemplate -SqlInstance $servers |
+Start-DbaXESession
 
 # Testing your backups is crazy easy! 
 Start-Process https://dbatools.io/Test-DbaLastBackup
-Test-DbaLastBackup -SqlInstance $old | Out-GridView
+Test-DbaLastBackup -SqlInstance localhost\sql2017 | Out-GridView
 
 # But what if you want to test your backups on a different server?
 Test-DbaLastBackup -SqlInstance $old -Destination $new | Out-GridView
@@ -65,7 +66,7 @@ Remove-DbaDatabaseSnapshot -SqlInstance $new -Snapshot db1_snapshot # or -Databa
 $new | Find-DbaStoredProcedure -Pattern dbatools
 
 # Have an employee who is leaving? Find all of their objects.
-$allservers | Find-DbaUserObject -Pattern ad\jdoe | Out-GridView
+$allservers | Find-DbaUserObject -Pattern loulou | Out-GridView
  
 # Find detached databases, by example
 Detach-DbaDatabase -SqlInstance $instance -Database AdventureWorks2012
