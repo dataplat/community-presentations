@@ -54,6 +54,10 @@ Send-DbcMailMessage -To clemaire@dbatools.io -From nobody@dbachecks.io -SmtpServ
 # Have specific requirements and want to add your own checks? Add your own repo! *
 Set-DbcConfig -Name app.checkrepos -Value C:\temp\checks -Append
 
+# What does our repo look like?
+Invoke-Item "$(Split-Path (Get-Module dbachecks).Path)\checks"
+Start-Process https://dbachecks.io/wiki
+
 # Set a global, persistent credential
 Set-DbcConfig -Name app.sqlcredential -Value (Get-Credential sqladmin)
 
