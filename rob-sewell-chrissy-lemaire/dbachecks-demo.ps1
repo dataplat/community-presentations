@@ -5,6 +5,8 @@ Install-Module Pester -SkipPublisherCheck
 Update-Module Pester -Force
 Import-Module Pester -Force
 
+
+
 # Perform a basic check
 Invoke-DbcCheck -SqlInstance localhost\sql2017 -Checks SuspectPage, LastBackup
 

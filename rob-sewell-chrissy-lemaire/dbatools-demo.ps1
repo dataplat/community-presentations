@@ -121,7 +121,7 @@ $instance | Install-DbaMaintenanceSolution -ReplaceExisting -BackupLocation C:\t
 
 # Get db space AND write it to table
 Get-DbaDatabaseFile -SqlInstance $instance | Out-GridView
-Get-DbaDatabaseFile -SqlInstance $instance -IncludeSystemDB | Write-DbaDataTable -SqlInstance $instance -Database tempdb -Table DiskSpaceExample -AutoCreateTable
+Get-DbaDatabaseFile -SqlInstance $instance | Write-DbaDataTable -SqlInstance $instance -Database tempdb -Table DiskSpaceExample -AutoCreateTable
 Invoke-DbaSqlcmd -ServerInstance $instance -Database tempdb -Query 'SELECT * FROM dbo.DiskSpaceExample' | Out-GridView
 
 
@@ -136,22 +136,15 @@ Get-DbaBackupHistory -SqlInstance $new | Out-GridView
 # don't have remoting access? Explore the filesystem. Uses master.sys.xp_dirtree
 Get-DbaFile -SqlInstance $instance
 Get-DbaFile -SqlInstance $instance -Depth 3 -Path 'C:\Program Files\Microsoft SQL Server' | Out-GridView
-New-DbaSqlDirectory -SqlInstance $instance  -Path 'C:\Program Files\Microsoft SQL Server\MSSQL14.MSSQLSERVER\test'
-
-
-# Out-GridView madness <3
-Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -NetworkShare \\workstation\c$\temp -Force
-
+New-DbaSqlDirectory -SqlInstance $instance  -Path 'C:\temp\test'
 
 # Test/Set SQL max memory
 $allservers | Get-DbaMaxMemory
 $allservers | Test-DbaMaxMemory | Format-Table
-$allservers | Test-DbaMaxMemory | Where-Object { $_.SqlMaxMB -gt $_.TotalMB } | Set-DbaMaxMemory -WhatIf
-Set-DbaMaxMemory -SqlInstance $instance -MaxMb 1023
 
 
 # We've even got our own config system!
-Get-DbaConfig | Out-GridView
+Get-DbaConfig
 
 # Check out our logs directory, so Enterprise :D
 Invoke-Item (Get-DbaConfig -FullName path.dbatoolslogpath).Value
