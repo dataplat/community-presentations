@@ -28,7 +28,7 @@ $startDbaMigrationSplat = @{
 Start-DbaMigration @startDbaMigrationSplat -Force | Select * | Out-GridView
 
 
-# Use Ola Hallengren's backup script? We can restore an *ENTIRE INSTNACE* with just one line
+# Use Ola Hallengren's backup script? We can restore an *ENTIRE INSTANCE* with just one line
 Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance $new -WithReplace
 
 
