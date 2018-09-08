@@ -1,10 +1,11 @@
 break
 
-$cms = "localhost\sql2016"
-
 # Get yo servers
-$instance = Get-DbaRegisteredServer -SqlInstance $cms -Group Site1
-$instance2 = Get-DbaRegisteredServer -SqlInstance $cms -Group Site2
+$instance1 = Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -Group Site1
+$instance2 = Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -Group Site2
+
+# But for the demo
+$instance = "workstation\sql2016"
 
 # See commands
 Get-Command -Name *export* -Module dbatools -Type Function
@@ -34,42 +35,35 @@ $Options.ScriptBatchTerminator = $true
 $Options.AnsiFile = $true
 
 "sqladmin" | clip
-Get-DbaDbMailAccount -SqlInstance $instance -SqlCredential sqladmin | Export-DbaScript -Path C:\temp\export.sql -ScriptingOptionsObject $options -NoPrefix |
+Get-DbaDbMailProfile -SqlInstance $instance -SqlCredential sqladmin | 
+Export-DbaScript -Path C:\temp\export.sql -ScriptingOptionsObject $options -NoPrefix |
 Invoke-Item
 
 # So special
 Export-DbaSpConfigure -SqlInstance $instance -Path C:\temp\sp_configure.sql
-Export-DbaCredential -SqlInstance $instance -Path C:\temp\credential.sql
-Export-DbaLogin -SqlInstance $instance -Path C:\temp\logins.sql
+Export-DbaLinkedServer -SqlInstance $instance -Path C:\temp\linkedserver.sql | Invoke-Item
+Export-DbaLogin -SqlInstance $instance -Path C:\temp\logins.sql | Invoke-Item
 
 # Other specials
 Backup-DbaDbMasterKey -SqlInstance sql2017 -Credential sup
 
-# Nowadays, we don't just backup databases. Now, we're backing up logins
-Export-DbaLogin -SqlInstance $instance -Path C:\temp\logins.sql
-Invoke-Item C:\temp\logins.sql
-
 # What if you just want to script out your restore?
-Get-ChildItem -Directory \\workstation\backups\subset\ | Restore-DbaDatabase -SqlInstance $instance2 -OutputScriptOnly -WithReplace | Out-File -Filepath c:\temp\restore.sql
+Get-ChildItem -Directory \\workstation\backups\subset\ | Restore-DbaDatabase -SqlInstance localhost\sql2017 -OutputScriptOnly -WithReplace | Out-File -Filepath c:\temp\restore.sql
 Invoke-Item c:\temp\restore.sql
+
+# Big ol reveal
 
 # Do it all at once
 Export-DbaInstance -SqlInstance $instance -Path \\workstation\backups\DR
+Invoke-Item \\workstation\backups\DR
 
 # It ain't a DR plan without testing
 Test-DbaLastBackup -SqlInstance $instance
 
+# 1. associate sql with sql
+# 2. Delete endpoints on sql2017, audit
 # Apply stuff
-Get-ChildItem -Path \\workstation\backups\DR | Invoke-DbaQuery
+Get-ChildItem -Path \\workstation\backups\DR | Invoke-Item
 
 # Use Ola Hallengren's backup script? We can restore an *ENTIRE INSTANCE* with just one line
-Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance $instance2 -WithReplace
-
-#Imports
-#Get Cert
-#Show tests
-# Do backups & exports
-# Stop Site1
-# Turn off thing
-# Pester test bonus?
-# Power Bi Bonus
+Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance localhost\sql2017 -WithReplace
