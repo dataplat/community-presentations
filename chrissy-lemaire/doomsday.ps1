@@ -63,6 +63,7 @@ Test-DbaLastBackup -SqlInstance $instance
 # 1. associate sql with sql
 # 2. Delete endpoints on sql2017, audit
 # Apply stuff
+# delete extra trigger
 Get-ChildItem -Path \\workstation\backups\DR | Invoke-Item
 
 # Use Ola Hallengren's backup script? We can restore an *ENTIRE INSTANCE* with just one line
