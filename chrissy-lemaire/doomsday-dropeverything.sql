@@ -8,6 +8,17 @@ drop database dbwithsprocs
 go
 DROP LOGIN [WORKSTATION\powershell]
 GO
+DROP LOGIN [login1]
+GO
+DROP LOGIN [login2]
+GO
+DROP LOGIN [login3]
+GO
+DROP LOGIN [login4]
+GO
+DROP LOGIN [login5]
+GO
+
 USE [master]
 GO
 /****** Object:  Credential [abc]    Script Date: 9/9/18 11:55:42 AM ******/
