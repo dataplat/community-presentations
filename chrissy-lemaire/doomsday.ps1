@@ -55,6 +55,8 @@ Invoke-Item c:\temp\restore.sql
 Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance localhost\sql2017 -WithReplace
 
 # Big ol reveal
+# Check that everything exists prior to export
+Invoke-Pester C:\github\community-presentations\chrissy-lemaire\doomsday.Tests.ps1
 
 # Do it all at once
 Export-DbaInstance -SqlInstance $instance -Path \\workstation\backups\DR
@@ -67,6 +69,9 @@ Test-DbaLastBackup -SqlInstance $instance
 # Now let's test the output scripts. 
 # This will also kill SSMS so that I'm forced to refresh, and open it back up
 . C:\github\community-presentations\chrissy-lemaire\doomsday-dropeverything.ps1
+
+# Check that everything has been dropped
+Invoke-Pester C:\github\community-presentations\chrissy-lemaire\doomsday.Tests.ps1
 
 # Prep
 Stop-DbaService -ComputerName localhost -InstanceName sql2016 -Type Agent
@@ -81,3 +86,6 @@ $files | ForEach-Object {
 }
 
 Start-DbaService -ComputerName localhost -InstanceName sql2016 -Type Agent
+
+# Check if everything is back
+Invoke-Pester C:\github\community-presentations\chrissy-lemaire\doomsday.Tests.ps1
