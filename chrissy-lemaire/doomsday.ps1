@@ -65,17 +65,19 @@ Test-DbaLastBackup -SqlInstance $instance
 # This will also kill SSMS so that I'm forced to refresh, and open it back up
 . C:\github\community-presentations\chrissy-lemaire\doomsday-dropeverything.ps1
 
-# 1. associate sql with sql
-# 2. Delete endpoints on sql2017, audit
-# Apply stuff
-# delete extra trigger
-# turn on presentation mode
-# add a ton more logins
-$files = Get-ChildItem -Path \\workstation\backups\DR -Exclude *userobj* | Sort-Object LastWriteTime
+# Prep
+Stop-DbaService -ComputerName localhost -InstanceName sql2016 -Type Agent
+Get-DbaProcess -SqlInstance localhost\sql2016 -Database msdb | Stop-DbaProcess
+
+
+# Perform restores and restart SQL Agent
+$files = Get-ChildItem -Path \\workstation\backups\DR -Exclude *userobj*,*agent* | Sort-Object LastWriteTime
 $files | ForEach-Object {
     Write-Output "Running $psitem"
     Invoke-DbaQuery -File $PSItem -SqlInstance workstation\sql2016 -ErrorAction Ignore -Verbose
 }
+
+Start-DbaService -ComputerName localhost -InstanceName sql2016 -Type Agent
 
 # Use Ola Hallengren's backup script? We can restore an *ENTIRE INSTANCE* with just one line
 Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance localhost\sql2017 -WithReplace
