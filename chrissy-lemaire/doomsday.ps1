@@ -51,6 +51,9 @@ Backup-DbaDbMasterKey -SqlInstance sql2017 -Credential sup
 Get-ChildItem -Directory \\workstation\backups\subset\ | Restore-DbaDatabase -SqlInstance localhost\sql2017 -OutputScriptOnly -WithReplace | Out-File -Filepath c:\temp\restore.sql
 Invoke-Item c:\temp\restore.sql
 
+# Use Ola Hallengren's backup script? We can restore an *ENTIRE INSTANCE* with just one line
+Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance localhost\sql2017 -WithReplace
+
 # Big ol reveal
 
 # Do it all at once
@@ -78,6 +81,3 @@ $files | ForEach-Object {
 }
 
 Start-DbaService -ComputerName localhost -InstanceName sql2016 -Type Agent
-
-# Use Ola Hallengren's backup script? We can restore an *ENTIRE INSTANCE* with just one line
-Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance localhost\sql2017 -WithReplace
