@@ -44,17 +44,41 @@ Export-DbaSpConfigure -SqlInstance $instance -Path C:\temp\sp_configure.sql
 Export-DbaLinkedServer -SqlInstance $instance -Path C:\temp\linkedserver.sql | Invoke-Item
 Export-DbaLogin -SqlInstance $instance -Path C:\temp\logins.sql | Invoke-Item
 
-# Other specials
-Backup-DbaDbMasterKey -SqlInstance sql2017 -Credential sup
+# Other specials, relative to the server itself
+Backup-DbaDbMasterKey -SqlInstance $instance
+Backup-DbaDbMasterKey -SqlInstance $instance -Path \\localhost\backups
 
 # What if you just want to script out your restore?
 Get-ChildItem -Directory \\workstation\backups\subset\ | Restore-DbaDatabase -SqlInstance localhost\sql2017 -OutputScriptOnly -WithReplace | Out-File -Filepath c:\temp\restore.sql
 Invoke-Item c:\temp\restore.sql
 
+# Log shipping, what's up
+ $params = @{
+    Source = 'localhost\sql2016'
+    Destination = 'localhost\sql2017'
+    Database = 'shipped'
+    BackupNetworkPath= '\\localhost\backups'
+    BackupScheduleFrequencyType = 'daily'
+    BackupScheduleFrequencyInterval = 1
+    CompressBackup = $true
+    CopyScheduleFrequencyType = 'daily'
+    CopyScheduleFrequencyInterval = 1
+    GenerateFullBackup = $true
+    Force = $true
+}
+
+Invoke-DbaLogShipping @params
+
 # Use Ola Hallengren's backup script? We can restore an *ENTIRE INSTANCE* with just one line
 Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance localhost\sql2017 -WithReplace
 
-# Big ol reveal
+
+<# 
+
+    Introducing Export-DbaInstance
+
+#>
+
 # Check that everything exists prior to export
 Invoke-Pester C:\github\community-presentations\chrissy-lemaire\doomsday.Tests.ps1
 
@@ -64,7 +88,6 @@ Invoke-Item \\workstation\backups\DR
 
 # It ain't a DR plan without testing
 Test-DbaLastBackup -SqlInstance $instance
-
 
 # Now let's test the output scripts. 
 # This will also kill SSMS so that I'm forced to refresh, and open it back up
