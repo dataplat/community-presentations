@@ -60,12 +60,22 @@ Invoke-Item \\workstation\backups\DR
 # It ain't a DR plan without testing
 Test-DbaLastBackup -SqlInstance $instance
 
+
+# Now let's test the output scripts. 
+# This will also kill SSMS so that I'm forced to refresh, and open it back up
+. C:\github\community-presentations\chrissy-lemaire\doomsday-dropeverything.ps1
+
 # 1. associate sql with sql
 # 2. Delete endpoints on sql2017, audit
 # Apply stuff
 # delete extra trigger
 # turn on presentation mode
-Get-ChildItem -Path \\workstation\backups\DR | Invoke-Item
+# add a ton more logins
+$files = Get-ChildItem -Path \\workstation\backups\DR -Exclude *userobj* | Sort-Object LastWriteTime
+$files | ForEach-Object {
+    Write-Output "Running $psitem"
+    Invoke-DbaQuery -File $PSItem -SqlInstance workstation\sql2016 -ErrorAction Ignore -Verbose
+}
 
 # Use Ola Hallengren's backup script? We can restore an *ENTIRE INSTANCE* with just one line
 Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance localhost\sql2017 -WithReplace
