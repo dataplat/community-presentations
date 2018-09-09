@@ -1,4 +1,9 @@
 ﻿Describe "doomsday tests" -Tags "IntegrationTests" {
+    It "Still has the proper configuration settings" {
+        $results = Get-DbaSpConfigure -SqlInstance localhost\sql2016 -Name CursorThreshold
+        $results.ConfiguredValue  | Should -Be 2000000000
+    }
+
     It "Still has all the custom errors" {
         $results = Get-DbaCustomError -SqlInstance localhost\sql2016 
         $results.Id | Should -Contain 50001
@@ -29,6 +34,15 @@
         'localhost','repl_distributor','SQL2012','SQL2014','SQL2016','SQL2016A' | Should -BeIn $results.Name
     }
 
+    It "Still has all the registered servers" {
+        $results = Get-DbaRegisteredServer -SqlInstance localhost\sql2016 
+        'sql2016','sql2017' | Should -BeIn $results.Name
+    }
+
+    It "Still has all the registered server groups" {
+        $results = Get-DbaRegisteredServerGroup -SqlInstance localhost\sql2016 
+        'Site1','Site2' | Should -BeIn $results.Name
+    }
     It "Still has all the backup devices" {
         $results = Get-DbaBackupDevice -SqlInstance localhost\sql2016 
         'sup baw' | Should -BeIn $results.Name
