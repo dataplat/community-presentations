@@ -56,6 +56,9 @@ DROP TRIGGER [tr_MScdc_db_ddl_event] ON ALL SERVER
 GO
 USE [master]
 GO
+/****** Object:  DdlTrigger [dbatoolsci-trigger]    Script Date: 9/9/18 4:59:30 PM ******/
+DROP TRIGGER [dbatoolsci-trigger] ON ALL SERVER
+GO
 /****** Object:  LinkedServer [localhost]    Script Date: 9/9/18 11:58:57 AM ******/
 EXEC master.dbo.sp_dropserver @server=N'localhost', @droplogins='droplogins'
 GO
