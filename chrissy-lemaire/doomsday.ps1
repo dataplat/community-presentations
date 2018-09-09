@@ -48,8 +48,23 @@ Export-DbaLogin -SqlInstance $instance -Path C:\temp\logins.sql | Invoke-Item
 Backup-DbaDbMasterKey -SqlInstance $instance
 Backup-DbaDbMasterKey -SqlInstance $instance -Path \\localhost\backups
 
-# What if you just want to script out your restore?
-Get-ChildItem -Directory \\workstation\backups\subset\ | Restore-DbaDatabase -SqlInstance localhost\sql2017 -OutputScriptOnly -WithReplace | Out-File -Filepath c:\temp\restore.sql
+# What if you just want to script out your restore? Invoke Backup-DbaDatabase or your maintenance job
+Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - SYSTEM_DATABASES - FULL','DatabaseBackup - USER_DATABASES - FULL'
+Get-DbaRunningJob -SqlInstance localhost\sql2016
+
+Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - USER_DATABASES - DIFF'
+Get-DbaRunningJob -SqlInstance localhost\sql2016
+
+Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - USER_DATABASES - LOG'
+Get-DbaRunningJob -SqlInstance localhost\sql2016
+
+Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - USER_DATABASES - LOG'
+Get-DbaRunningJob -SqlInstance localhost\sql2016
+
+Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - USER_DATABASES - LOG'
+Get-DbaRunningJob -SqlInstance localhost\sql2016
+
+Get-ChildItem -Directory '\\localhost\backups\WORKSTATION$SQL2016' | Restore-DbaDatabase -SqlInstance localhost\sql2017 -OutputScriptOnly -WithReplace | Out-File -Filepath c:\temp\restore.sql
 Invoke-Item c:\temp\restore.sql
 
 # Log shipping, what's up
@@ -71,7 +86,6 @@ Invoke-DbaLogShipping @params
 
 # Use Ola Hallengren's backup script? We can restore an *ENTIRE INSTANCE* with just one line
 Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance localhost\sql2017 -WithReplace
-
 
 
 
