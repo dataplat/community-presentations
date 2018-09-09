@@ -58,10 +58,10 @@ Invoke-Item c:\temp\restore.sql
     Destination = 'localhost\sql2017'
     Database = 'shipped'
     BackupNetworkPath= '\\localhost\backups'
-    BackupScheduleFrequencyType = 'daily'
+    BackupScheduleFrequencyType = 'Daily'
     BackupScheduleFrequencyInterval = 1
     CompressBackup = $true
-    CopyScheduleFrequencyType = 'daily'
+    CopyScheduleFrequencyType = 'Daily'
     CopyScheduleFrequencyInterval = 1
     GenerateFullBackup = $true
     Force = $true
@@ -73,11 +73,16 @@ Invoke-DbaLogShipping @params
 Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance localhost\sql2017 -WithReplace
 
 
+
+
 <# 
 
     Introducing Export-DbaInstance
+    Written for #SQLGLA!
 
 #>
+
+
 
 # Check that everything exists prior to export
 Invoke-Pester C:\github\community-presentations\chrissy-lemaire\doomsday.Tests.ps1
