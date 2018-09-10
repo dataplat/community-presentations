@@ -68,7 +68,7 @@ Get-DbaRunningJob -SqlInstance localhost\sql2016
 Get-ChildItem -Directory '\\localhost\backups\WORKSTATION$SQL2016' | Restore-DbaDatabase -SqlInstance localhost\sql2017 -OutputScriptOnly -WithReplace | Out-File -Filepath c:\temp\restore.sql
 Invoke-Item c:\temp\restore.sql
 
-# Log shipping, what's up
+# Log shipping, what's up - dbatools.io/logshipping
  $params = @{
     Source = 'localhost\sql2016'
     Destination = 'localhost\sql2017'
@@ -84,6 +84,10 @@ Invoke-Item c:\temp\restore.sql
 }
 
 Invoke-DbaLogShipping @params
+
+# Test it!
+Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job LSBackup_shipped
+Test-DbaLogShippingStatus -SqlInstance localhost\sql2016 | Out-GridView
 
 # Use Ola Hallengren's backup script? We can restore an *ENTIRE INSTANCE* with just one line
 Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance localhost\sql2017 -WithReplace
