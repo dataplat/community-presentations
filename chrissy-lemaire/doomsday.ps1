@@ -1,6 +1,6 @@
 break
 
-# Get yo servers
+# Get yo servers - read more at dbatools.io/cms
 $site1servers = Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -Group Site1
 $site2servers = Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -Group Site2
 
