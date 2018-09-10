@@ -72,6 +72,8 @@ Invoke-Item c:\temp\restore.sql
  $params = @{
     Source = 'localhost\sql2016'
     Destination = 'localhost\sql2017'
+    PrimaryMonitorServer = 'localhost\sql2016'
+    SecondaryMonitorServer = 'localhost\sql2016'
     Database = 'shipped'
     BackupNetworkPath= '\\localhost\backups'
     BackupScheduleFrequencyType = 'Daily'
@@ -87,6 +89,11 @@ Invoke-DbaLogShipping @params
 
 # Test it!
 Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job LSBackup_shipped
+Start-DbaAgentJob -SqlInstance localhost\sql2017 -Job LSCopy_shipped
+Start-DbaAgentJob -SqlInstance localhost\sql2017 -Job LSRestore_shipped
+
+Get-DbaRunningJob -SqlInstance localhost\sql2016, localhost\sql2017
+
 Test-DbaLogShippingStatus -SqlInstance localhost\sql2016 | Out-GridView
 
 # Use Ola Hallengren's backup script? We can restore an *ENTIRE INSTANCE* with just one line
