@@ -1,13 +1,14 @@
 break
 
 # Get yo servers
-$instance1 = Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -Group Site1
-$instance2 = Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -Group Site2
+$site1servers = Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -Group Site1
+$site2servers = Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -Group Site2
 
 # But for the demo
 $instance = "workstation\sql2016"
 
 # See commands
+Get-Command -Name Export-DbaScript -Module dbatools -Type Function
 Get-Command -Name *export* -Module dbatools -Type Function
 Get-Command -Name *backup* -Module dbatools -Type Function
 Get-Command -Name *dbadac* -Module dbatools -Type Function
