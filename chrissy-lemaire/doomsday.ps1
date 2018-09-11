@@ -95,10 +95,6 @@ Invoke-DbaLogShipping @params
 # And now, failover to secondary
 Invoke-DbaLogShippingRecovery -SqlInstance localhost\sql2017 -Database shipped
 
-# Check it
-Test-DbaLogShippingStatus -SqlInstance localhost\sql2017 | Out-GridView
-
-
 
 <# 
 
