@@ -68,12 +68,15 @@ Get-DbaRunningJob -SqlInstance localhost\sql2016
 Get-ChildItem -Directory '\\localhost\backups\WORKSTATION$SQL2016' | Restore-DbaDatabase -SqlInstance localhost\sql2017 -OutputScriptOnly -WithReplace | Out-File -Filepath c:\temp\restore.sql
 Invoke-Item c:\temp\restore.sql
 
+
+# Speaking of Ola, use his backup script? We can restore an *ENTIRE INSTANCE* with just one line
+Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance localhost\sql2017 -WithReplace
+
 # Log shipping, what's up - dbatools.io/logshipping
+# Also supports multiple destinations!
  $params = @{
     Source = 'localhost\sql2016'
     Destination = 'localhost\sql2017'
-    PrimaryMonitorServer = 'localhost\sql2016'
-    SecondaryMonitorServer = 'localhost\sql2016'
     Database = 'shipped'
     BackupNetworkPath= '\\localhost\backups'
     BackupScheduleFrequencyType = 'Daily'
@@ -87,17 +90,11 @@ Invoke-Item c:\temp\restore.sql
 
 Invoke-DbaLogShipping @params
 
-# Test it!
-Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job LSBackup_shipped
-Start-DbaAgentJob -SqlInstance localhost\sql2017 -Job LSCopy_shipped
-Start-DbaAgentJob -SqlInstance localhost\sql2017 -Job LSRestore_shipped
+# And now, failover to secondary
+Invoke-DbaLogShippingRecovery -SqlInstance localhost\sql2017 -Database shipped
 
-Get-DbaRunningJob -SqlInstance localhost\sql2016, localhost\sql2017
-
+# Check it
 Test-DbaLogShippingStatus -SqlInstance localhost\sql2016 | Out-GridView
-
-# Use Ola Hallengren's backup script? We can restore an *ENTIRE INSTANCE* with just one line
-Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -SqlInstance localhost\sql2017 -WithReplace
 
 
 
