@@ -79,6 +79,8 @@ Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -Sq
     Destination = 'localhost\sql2017'
     Database = 'shipped'
     BackupNetworkPath= '\\localhost\backups'
+    PrimaryMonitorServer = 'localhost\sql2017'
+    SecondaryMonitorServer = 'localhost\sql2017'
     BackupScheduleFrequencyType = 'Daily'
     BackupScheduleFrequencyInterval = 1
     CompressBackup = $true
@@ -94,7 +96,7 @@ Invoke-DbaLogShipping @params
 Invoke-DbaLogShippingRecovery -SqlInstance localhost\sql2017 -Database shipped
 
 # Check it
-Test-DbaLogShippingStatus -SqlInstance localhost\sql2016 | Out-GridView
+Test-DbaLogShippingStatus -SqlInstance localhost\sql2017 | Out-GridView
 
 
 
