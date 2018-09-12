@@ -1,15 +1,5 @@
 ﻿Describe "doomsday tests" -Tags "IntegrationTests" {
-    It "Still has the proper configuration settings" {
-        $results = Get-DbaSpConfigure -SqlInstance localhost\sql2016 -Name CursorThreshold
-        $results.ConfiguredValue  | Should -Be 2000000000
-    }
-
-    It "Still has all the custom errors" {
-        $results = Get-DbaCustomError -SqlInstance localhost\sql2016 
-        $results.Id | Should -Contain 50001
-    }
-	
-	It "Still has all the databases" {
+    It "Still has all the databases" {
         $results = Get-DbaDatabase -SqlInstance localhost\sql2016 
         'anotherdb', 'db1', 'dbwithsprocs' | Should -BeIn $results.Name
     }
@@ -48,6 +38,16 @@
         'sup baw' | Should -BeIn $results.Name
     }
 
+    It "Still has the proper configuration settings" {
+        $results = Get-DbaSpConfigure -SqlInstance localhost\sql2016 -Name CursorThreshold
+        $results.ConfiguredValue  | Should -Be 2000000000
+    }
+
+    It "Still has all the custom errors" {
+        $results = Get-DbaCustomError -SqlInstance localhost\sql2016 
+        $results.Id | Should -Contain 50001
+    }
+
     It "Still has all the mail profiles" {
         $results = Get-DbaDbMailProfile -SqlInstance localhost\sql2016 
         'The DBA Team' | Should -BeIn $results.Name
@@ -81,6 +81,11 @@
     It "Still has all the resource pools" {
         $results = Get-DbaRgResourcePool -SqlInstance localhost\sql2016 
         'Test Pool' | Should -BeIn $results.Name
+    }
+
+    It "Still has all the server roles" {
+        $results = Get-DbaServerRole -SqlInstance localhost\sql2016 
+        'whattup' | Should -BeIn $results.Name
     }
 
     It "Still has all the endpoints" {

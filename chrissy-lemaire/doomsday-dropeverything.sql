@@ -1,3 +1,50 @@
+USE [master]
+GO
+
+
+DECLARE @RoleName sysname
+set @RoleName = N'whattup'
+
+IF @RoleName <> N'public' and (select is_fixed_role from sys.server_principals where name = @RoleName) = 0
+BEGIN
+    DECLARE @RoleMemberName sysname
+    DECLARE Member_Cursor CURSOR FOR
+    select [name]
+    from sys.server_principals
+    where principal_id in ( 
+        select member_principal_id 
+        from sys.server_role_members 
+        where role_principal_id in (
+            select principal_id
+            FROM sys.server_principals where [name] = @RoleName  AND type = 'R' ))
+
+    OPEN Member_Cursor;
+
+    FETCH NEXT FROM Member_Cursor
+    into @RoleMemberName
+
+    DECLARE @SQL NVARCHAR(4000)
+        
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        
+        SET @SQL = 'ALTER SERVER ROLE '+ QUOTENAME(@RoleName,'[') +' DROP MEMBER '+ QUOTENAME(@RoleMemberName,'[')
+        EXEC(@SQL)
+        
+        FETCH NEXT FROM Member_Cursor
+        into @RoleMemberName
+    END;
+
+    CLOSE Member_Cursor;
+    DEALLOCATE Member_Cursor;
+END
+/****** Object:  ServerRole [whattup]    Script Date: 9/12/18 4:20:13 PM ******/
+
+DROP SERVER ROLE [whattup]
+GO
+
+
+
 EXEC sp_dropmessage 50001
 go
 drop database anotherdb
