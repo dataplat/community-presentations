@@ -21,7 +21,7 @@
 
     It "Still has all the linked servers" {
         $results = Get-DbaLinkedServer -SqlInstance workstation\sql2016 
-        'workstation','repl_distributor','SQL2012','SQL2014','SQL2016','SQL2016A' | Should -BeIn $results.Name
+        'localhost','repl_distributor','SQL2012','SQL2014','SQL2016','SQL2016A' | Should -BeIn $results.Name
     }
 
     It "Still has replication set up" {
