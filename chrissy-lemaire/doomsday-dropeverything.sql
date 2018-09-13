@@ -363,3 +363,5 @@ EXEC msdb.dbo.sp_syspolicy_delete_condition @condition_id=18
 GO
 
 
+
+drop database distribution
