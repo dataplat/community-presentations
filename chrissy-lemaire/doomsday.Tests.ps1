@@ -88,6 +88,16 @@
         'Test Pool' | Should -BeIn $results.Name
     }
 
+    It "Still has all the policies" {
+        $results = Get-DbaPbmPolicy -SqlInstance workstation\sql2016 
+        'awesome' | Should -BeIn $results.Name
+    }
+
+    It "Still has all the policy conditions" {
+        $results = Get-DbaPbmCondition -SqlInstance workstation\sql2016 
+        'hello' | Should -BeIn $results.Name
+    }
+
     It "Still has all the server roles" {
         $results = Get-DbaServerRole -SqlInstance workstation\sql2016 
         'whattup' | Should -BeIn $results.Name
