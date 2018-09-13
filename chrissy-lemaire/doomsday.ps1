@@ -125,7 +125,7 @@ Get-DbaProcess -SqlInstance localhost\sql2016 -Database msdb | Stop-DbaProcess
 
 
 # Perform restores and restart SQL Agent
-$files = Get-ChildItem -Path \\workstation\backups\DR -Exclude *userobj*,*agent* | Sort-Object LastWriteTime
+$files = Get-ChildItem -Path \\workstation\backups\DR -Exclude *agent* | Sort-Object LastWriteTime
 $files | ForEach-Object {
     Write-Output "Running $psitem"
     Invoke-DbaQuery -File $PSItem -SqlInstance workstation\sql2016 -ErrorAction Ignore -Verbose
