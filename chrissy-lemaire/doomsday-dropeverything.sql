@@ -1,3 +1,19 @@
+-- Dropping the snapshot articles
+use [anotherdb]
+exec sp_dropsubscription @publication = N'pubz', @article = N'anotherone', @subscriber = N'all', @destination_db = N'all'
+GO
+use [anotherdb]
+exec sp_droparticle @publication = N'pubz', @article = N'anotherone', @force_invalidate_snapshot = 1
+GO
+
+-- Dropping the snapshot publication
+use [anotherdb]
+exec sp_droppublication @publication = N'pubz'
+GO
+
+
+exec sp_dropdistributor @no_checks = 1, @ignore_distributor = 1
+go
 USE [master]
 GO
 
