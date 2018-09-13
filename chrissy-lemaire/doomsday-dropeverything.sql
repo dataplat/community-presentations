@@ -349,3 +349,17 @@ GO
 
 
 
+EXEC msdb.dbo.sp_syspolicy_delete_policy @policy_id=65
+
+GO
+
+EXEC msdb.dbo.sp_syspolicy_delete_object_set @object_set_id=67
+
+GO
+
+
+
+EXEC msdb.dbo.sp_syspolicy_delete_condition @condition_id=18
+GO
+
+
