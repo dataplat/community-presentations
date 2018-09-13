@@ -4,9 +4,6 @@ break
 $site1servers = Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -Group Site1
 $site2servers = Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -Group Site2
 
-# But for the demo
-$instance = "workstation\sql2016"
-
 # See commands
 Get-Command -Name Export-DbaScript -Module dbatools -Type Function
 Get-Command -Name *export* -Module dbatools -Type Function
@@ -17,13 +14,13 @@ Get-Command -Name *dbadac* -Module dbatools -Type Function
 # First up! Export-DbaScript
 
 # Start with something simple
-Get-DbaAgentJob -SqlInstance $instance | Select -First 1 | Export-DbaScript
+Get-DbaAgentJob -SqlInstance workstation\sql2016 | Select -First 1 | Export-DbaScript
 
 # Now let's look inside
-Get-DbaAgentJob -SqlInstance $instance | Select -First 1 | Export-DbaScript | Invoke-Item
+Get-DbaAgentJob -SqlInstance workstation\sql2016 | Select -First 1 | Export-DbaScript | Invoke-Item
 
 # Raw output and add a batch separator
-Get-DbaAgentJob -SqlInstance $instance | Export-DbaScript -Passthru -BatchSeparator GO
+Get-DbaAgentJob -SqlInstance workstation\sql2016 | Export-DbaScript -Passthru -BatchSeparator GO
 
 # Get crazy
 #Set Scripting Options
@@ -36,18 +33,18 @@ $Options.ScriptBatchTerminator = $true
 $Options.AnsiFile = $true
 
 "sqladmin" | clip
-Get-DbaDbMailProfile -SqlInstance $instance -SqlCredential sqladmin | 
+Get-DbaDbMailProfile -SqlInstance workstation\sql2016 -SqlCredential sqladmin | 
 Export-DbaScript -Path C:\temp\export.sql -ScriptingOptionsObject $options -NoPrefix |
 Invoke-Item
 
 # So special
-Export-DbaSpConfigure -SqlInstance $instance -Path C:\temp\sp_configure.sql
-Export-DbaLinkedServer -SqlInstance $instance -Path C:\temp\linkedserver.sql | Invoke-Item
-Export-DbaLogin -SqlInstance $instance -Path C:\temp\logins.sql | Invoke-Item
+Export-DbaSpConfigure -SqlInstance workstation\sql2016 -Path C:\temp\sp_configure.sql
+Export-DbaLinkedServer -SqlInstance workstation\sql2016 -Path C:\temp\linkedserver.sql | Invoke-Item
+Export-DbaLogin -SqlInstance workstation\sql2016 -Path C:\temp\logins.sql | Invoke-Item
 
 # Other specials, relative to the server itself
-Backup-DbaDbMasterKey -SqlInstance $instance
-Backup-DbaDbMasterKey -SqlInstance $instance -Path \\localhost\backups
+Backup-DbaDbMasterKey -SqlInstance workstation\sql2016
+Backup-DbaDbMasterKey -SqlInstance workstation\sql2016 -Path \\localhost\backups
 
 # What if you just want to script out your restore? Invoke Backup-DbaDatabase or your maintenance job
 Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - SYSTEM_DATABASES - FULL','DatabaseBackup - USER_DATABASES - FULL'
@@ -109,11 +106,11 @@ Invoke-DbaLogShippingRecovery -SqlInstance localhost\sql2017 -Database shipped
 Invoke-Pester C:\github\community-presentations\chrissy-lemaire\doomsday.Tests.ps1
 
 # Do it all at once
-Export-DbaInstance -SqlInstance $instance -Path \\workstation\backups\DR
+Export-DbaInstance -SqlInstance workstation\sql2016 -Path \\workstation\backups\DR
 Invoke-Item \\workstation\backups\DR
 
 # It ain't a DR plan without testing
-Test-DbaLastBackup -SqlInstance $instance
+Test-DbaLastBackup -SqlInstance workstation\sql2016
 
 # Now let's test the output scripts. 
 # This will also kill SSMS so that I'm forced to refresh, and open it back up
