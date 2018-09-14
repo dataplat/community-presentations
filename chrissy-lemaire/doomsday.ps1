@@ -106,7 +106,7 @@ Invoke-DbaLogShippingRecovery -SqlInstance localhost\sql2017 -Database shipped
 Invoke-Pester C:\github\community-presentations\chrissy-lemaire\doomsday.Tests.ps1
 
 # Do it all at once
-Export-DbaInstance -SqlInstance workstation\sql2016 -Path \\workstation\backups\DR -Exclude SysDbUserObjects
+Export-DbaInstance -SqlInstance workstation\sql2016 -Path \\workstation\backups\DR
 Invoke-Item \\workstation\backups\DR
 
 # It ain't a DR plan without testing

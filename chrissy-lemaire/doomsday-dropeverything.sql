@@ -365,3 +365,12 @@ GO
 
 
 drop database distribution
+
+go
+
+USE [master]
+GO
+
+/****** Object:  Table [dbo].[CommandLog]    Script Date: 9/14/18 2:07:40 AM ******/
+DROP TABLE [dbo].[CommandLog]
+GO

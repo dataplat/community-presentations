@@ -19,6 +19,11 @@
         'tr_MScdc_db_ddl_event','dbatoolsci-trigger' | Should -BeIn $results.Name
     }
 
+    It "Still has user objects in system databases" {
+        $results = Get-DbaDbTable -SqlInstance workstation\sql2016 -Database master -Table CommandLog
+        'CommandLog' | Should -BeIn $results.Name
+    }
+
     It "Still has all the linked servers" {
         $results = Get-DbaLinkedServer -SqlInstance workstation\sql2016 
         'localhost','repl_distributor','SQL2012','SQL2014','SQL2016','SQL2016A' | Should -BeIn $results.Name
