@@ -41,16 +41,16 @@ Find-DbaStoredProcedure -SqlInstance sql2014 -Database AdventureWorks2014 -Patte
 Find-DbaStoredProcedure -SQlInstance sql2014 -Pattern '\w+@\w+\.\w+'
 
 
-<# Find-DbaDatabaseGrowthEvent #>
-Find-DbaDatabaseGrowthEvent -SqlInstance $singleServer -Database AutoGrowth | Where-Object StartTime -gt (Get-Date).AddMinutes(-165) | Out-GridView
-(Find-DbaDatabaseGrowthEvent -SqlInstance $singleServer -Database AutoGrowth | Where-Object StartTime -gt (Get-Date).AddMinutes(-165)).Count
+<# Find-DbaDbGrowthEvent #>
+Find-DbaDbGrowthEvent -SqlInstance $singleServer -Database AutoGrowth | Where-Object StartTime -gt (Get-Date).AddMinutes(-165) | Out-GridView
+(Find-DbaDbGrowthEvent -SqlInstance $singleServer -Database AutoGrowth | Where-Object StartTime -gt (Get-Date).AddMinutes(-165)).Count
 
 
-Test-DbaVirtualLogFile -SqlInstance $singleServer -Database AutoGrowth
+Test-DbaDbVirtualLogFile -SqlInstance $singleServer -Database AutoGrowth
 Get-DbaDatabaseFreespace -SqlInstance $singleServer -Database AutoGrowth
 
-<# Expand-DbaTLogResponsibly #>
-Expand-DbaTLogResponsibly -SqlInstance $singleServer -Database AutoGrowth -TargetLogSizeMB 512 -ShrinkLogFile -ShrinkSizeMB 1 -BackupDirectory "\\nas\sql\SQLGrillen"
+<# Expand-DbaDbLogFile #>
+Expand-DbaDbLogFile -SqlInstance $singleServer -Database AutoGrowth -TargetLogSizeMB 512 -ShrinkLogFile -ShrinkSizeMB 1 -BackupDirectory "\\nas\sql\SQLGrillen"
 
 
 <# Orphaned File #>
@@ -147,3 +147,7 @@ $sqlservers | Test-DbaSpn | Out-GridView -PassThru | Set-DbaSpn -Whatif
 Get-DbaSpn | Remove-DbaSpn -Whatif
 
 $sqlservers | Test-DbaSpn -Credential (Get-Credential)
+
+
+
+

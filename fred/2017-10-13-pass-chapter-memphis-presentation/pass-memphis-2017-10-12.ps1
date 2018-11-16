@@ -68,7 +68,7 @@ Get-DbaDatabase -SqlInstance sql2014 -Database DBA
 Get-DbaDatabase -SqlInstance sql2016 -Database DBA
 
 # Do it
-Copy-DbaDatabase -Source sql2014 -Destination sql2016 -Database DBA -BackupRestore -NetworkShare \\sql2014\Migration
+Copy-DbaDatabase -Source sql2014 -Destination sql2016 -Database DBA -BackupRestore -SharedPath \\sql2014\Migration
 Get-DbaDatabase -SqlInstance sql2016 | ft
 Get-DbaDatabase -SqlInstance sql2016 -Database DBA
 
@@ -77,7 +77,7 @@ Get-DbaDatabase -SqlInstance sql2016 -Database DBA | Remove-DbaDatabase
 
 # Dummy-Code, but demonstrates scaling up
 Import-Csv C:\migration\mapping.csv | ForEach-Object {
-    Copy-DbaDatabase -Source $_.SourceInstance -Destination $_.DestinationInstance -Database $_.Database -BackupRestore -NetworkShare \\sql2014\Migration
+    Copy-DbaDatabase -Source $_.SourceInstance -Destination $_.DestinationInstance -Database $_.Database -BackupRestore -SharedPath \\sql2014\Migration
 }
 
 
@@ -106,13 +106,13 @@ explorer C:\temp\Glenn
 Install-DbaWhoIsActive -SqlInstance sql2016 -Database master
 Find-DbaStoredProcedure -SqlInstance sql2016 -IncludeSystemDatabases -Database master -Pattern "Adam Machanic"
 Invoke-DbaWhoisActive -SqlInstance sql2016 -ShowSystemSpids | ft
-get-help Get-DbaRegisteredServer -Examples
-Get-DbaRegisteredServer -SqlInstance sqlserver2014a | Install-DbaWhoIsActive -Database master
+get-help Get-DbaCmsRegServer -Examples
+Get-DbaCmsRegServer -SqlInstance sqlserver2014a | Install-DbaWhoIsActive -Database master
 # Adam Machanic, supporting dbas since 2007 and still rocking
 # Visit him on http://whoisactive.com
 
 # What size is this?
-Get-DbaDatabaseSpace -SqlInstance sql2016 -IncludeSystemDBs | Out-GridView
+Get-DbaDbSpace -SqlInstance sql2016 -IncludeSystemDBs | Out-GridView
 Get-DbaDiskSpace -ComputerName sql2014 -CheckForSql
 
 
@@ -127,7 +127,7 @@ Get-Help Test-DbaLastBackup -Online
 Test-DbaLastBackup -SqlInstance sql2016 | Out-GridView
 
 # This would theoretically work, but take a bit right now
-Get-DbaRegisteredServer -SqlInstance sqlserver2014a | Test-DbaLastBackup
+Get-DbaCmsRegServer -SqlInstance sqlserver2014a | Test-DbaLastBackup
 
 
 #---------------------------------------#
@@ -163,13 +163,13 @@ https://dbatools.io/agent/
 
 # a) Exceptions are Opt-In
 # Warning is nice and readable
-Get-DbaSqlService -ComputerName doesntexist
+Get-DbaService -ComputerName doesntexist
 # Let's try/catch that
-try { Get-DbaSqlService -ComputerName doesntexist }
+try { Get-DbaService -ComputerName doesntexist }
 catch { "Failed" }
 # Didn't work that well, did it?
 # Give it the Silent Treatment!
-try { Get-DbaSqlService -ComputerName doesntexist -Silent }
+try { Get-DbaService -ComputerName doesntexist -Silent }
 catch { "Failed" }
 
 # Note:
@@ -180,8 +180,13 @@ catch { "Failed" }
 Get-DbaDatabase -SqlInstance sql2016 -Database Search_Service_Application_AnalyticsReportingStoreDB_21b749e8b05e470aa0e6bb5360a6bfd5
 
 # Lots of options available
-Get-DbaConfig
+Get-DbatoolsConfig
 # Looking at something of interest
-Get-DbaConfig -FullName tabexpansion.disable
+Get-DbatoolsConfig -FullName tabexpansion.disable
 # Since that's not necessary, let's shut it down
-Set-DbaConfig tabexpansion.disable $true
+Set-DbatoolsConfig tabexpansion.disable $true
+
+
+
+
+

@@ -1,8 +1,8 @@
-## F5 this one Rob because then you find out you arent running as Administrator
+﻿## F5 this one Rob because then you find out you arent running as Administrator
  #Requires -RunAsAdministrator
 cd presentations:\
 # Import-Module GIT:\dbatools\dbatools.psd1 -Verbose
-(Get-DbaTable -SqlInstance Rob-XPS\SQL2016 -Database DBA-Admin -Table ManchesterDemo).Drop() 
+(Get-DbaDbTable -SqlInstance Rob-XPS\SQL2016 -Database DBA-Admin -Table ManchesterDemo).Drop() 
 $script = @"
 CREATE TABLE [dbo].[ManchesterDemo](
 	[id] [int] NOT NULL,
@@ -101,7 +101,7 @@ Describe "Testing for Presentation" {
 Describe "Testing for Demo - SQL2016 Instance"{
     $SQL = 'Rob-XPS\SQL2016'
     It "Should have the correct Demo Logins"{
-        (Get-DbaLogin -SqlInstance $SQL).Where{$_.Name -like '*ManchesterDemo*'}.Count | Should Be 15
+        (Get-DbaErrorLogin -SqlInstance $SQL).Where{$_.Name -like '*ManchesterDemo*'}.Count | Should Be 15
     }
     It "Should have the correct credential" {
         (Get-DbaCredential -SqlInstance $sql).Where{$_.Name -like '*Manchester*'}.Count | Should Be 1
@@ -136,7 +136,7 @@ Describe "Testing for Demo - Bolton Instance" {
     $BOLTON = Connect-DbaSqlServer -SqlInstance $SQL 
     It "Should have the correct Demo Logins" {
         $exclude = '##MS_PolicyEventProcessingLogin##', '##MS_PolicyTsqlExecutionLogin##', 'NT AUTHORITY\SYSTEM', 'BUILTIN\Administrators', 'NT AUTHORITY\NETWORK SERVICE', 'sa','NT Service\MSSQL$BOLTON','NT SERVICE\SQLAgent$BOLTON','NT SERVICE\SQLTELEMETRY$BOLTON','NT SERVICE\SQLWriter','NT SERVICE\Winmgmt','ROB-XPS\mrrob'
-        (Get-DbaLogin -SqlInstance $SQL ).Where{$_.Name -notin $exclude}.Count | Should Be 0
+        (Get-DbaErrorLogin -SqlInstance $SQL ).Where{$_.Name -notin $exclude}.Count | Should Be 0
     }
     It "Should have the correct number of credentials" {
         (Get-DbaCredential -SqlInstance $sql ).Count | Should Be 0
@@ -163,4 +163,6 @@ Describe "Testing for Demo - Bolton Instance" {
         $Bolton.JobServer.ProxyAccounts.Count | Should Be 0
     }
 }
+
+
 

@@ -1,4 +1,4 @@
-# Don't run everything, thanks @alexandair!
+﻿# Don't run everything, thanks @alexandair!
 break
 
 # IF THIS SCRIPT IS RUN ON LOCAL SQL INSTANCES, YOU MUST RUN ISE OR POWERSHELL AS ADMIN
@@ -92,8 +92,8 @@ Test-DbaLastBackup -SqlInstance $old -Destination $new -VerifyOnly | Out-GridVie
 #region databasespace
 
 # Get Db Free Space AND write it to disk
-Get-DbaDatabaseSpace -SqlInstance $instance
-Get-DbaDatabaseSpace -SqlInstance $instance -IncludeSystemDB | Out-DbaDataTable | Write-DbaDataTable -SqlInstance $instance -Database tempdb -Table DiskSpaceExample -AutoCreateTable
+Get-DbaDbSpace -SqlInstance $instance
+Get-DbaDbSpace -SqlInstance $instance -IncludeSystemDB | ConvertTo-DbaDataTable | Write-DbaDataTable -SqlInstance $instance -Database tempdb -Table DiskSpaceExample -AutoCreateTable
 
 # Run a lil query
 Ssms.exe "C:\temp\tempdbquery.sql"
@@ -109,14 +109,14 @@ $allservers | Test-DbaMaxMemory | Where-Object { $_.SqlMaxMB -gt $_.TotalMB } | 
 Set-DbaMaxMemory -SqlInstance $instance -MaxMb 2048
 
 # RecoveryModel
-Test-DbaFullRecoveryModel -SqlInstance $instance
-Test-DbaFullRecoveryModel -SqlInstance $instance | Where { $_.ConfiguredRecoveryModel -ne $_.ActualRecoveryModel }
+Test-DbaDbRecoveryModel -SqlInstance $instance
+Test-DbaDbRecoveryModel -SqlInstance $instance | Where { $_.ConfiguredRecoveryModel -ne $_.ActualRecoveryModel }
 
 # Testing sql server larock
 Test-DbaLinkedServerConnection -SqlInstance $instance
 
 # Some vlfs
-$allservers | Test-DbaVirtualLogFile | Where-Object {$_.Count -ge 50} | Sort-Object Count -Descending | Out-GridView
+$allservers | Test-DbaDbVirtualLogFile | Where-Object {$_.Count -ge 50} | Sort-Object Count -Descending | Out-GridView
 
 #endregion
 
@@ -135,14 +135,14 @@ Find-DbaOrphanedFile -SqlInstance $instance | Out-GridView
 ((Find-DbaOrphanedFile -SqlInstance $instance -LocalOnly | Get-ChildItem | Select -ExpandProperty Length | Measure-Object -Sum)).Sum / 1MB
 Find-DbaOrphanedFile -SqlInstance $instance -LocalOnly | Remove-Item -Whatif
 
-# Reset-SqlAdmin
-Reset-SqlAdmin -SqlInstance $instance -Login sqladmin -Verbose
+# Reset-DbaAdmin
+Reset-DbaAdmin -SqlInstance $instance -Login sqladmin -Verbose
 
 #endregion
 
 #region bits and bobs
 # Internal config 
-Get-DbaConfig
+Get-DbatoolsConfig
 
 # Glenn Berry's DMV
  Invoke-DbaDiagnosticQuery -SqlInstance $instance | Export-DbaDiagnosticQuery -Path C:\temp
@@ -168,7 +168,7 @@ $options.WithDependencies = $true
 Get-DbaAgentJob -SqlInstance $old | Export-DbaScript -ScriptingOptionsObject $options
 
 # Build ref!
-$allservers | Get-DbaSqlBuildReference | Format-Table
+$allservers | Get-DbaBuildReference | Format-Table
 
 # Identity usage
 Test-DbaIdentityUsage -SqlInstance $instance | Out-GridView
@@ -177,7 +177,7 @@ Test-DbaIdentityUsage -SqlInstance $instance | Out-GridView
 Get-DbaExecutionPlan -SqlInstance $instance -Database ReportServer | Export-DbaExecutionPlan -Path C:\temp
 
 # OGV madness
-Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -NetworkShare \\workstation\c$\temp
+Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -SharedPath \\workstation\c$\temp
 
 #endregion
 
@@ -205,3 +205,10 @@ Get-DbaSpConfigure -SqlInstance $new | Where-Object { $_.ConfigName -in 'Default
 Select-Object ConfigName, RunningValue, IsRunningDefaultValue | Format-Table -AutoSize
 
 #endregion
+
+
+
+
+
+
+

@@ -1,12 +1,12 @@
-# Set the source database to Read-Only
-Set-DbaDatabaseState -SqlInstance sqlcluster -Database WSS_Content -ReadOnly -Force
+﻿# Set the source database to Read-Only
+Set-DbaDbState -SqlInstance sqlcluster -Database WSS_Content -ReadOnly -Force
 
 # Perform the database and accompanying login migration
-Copy-DbaDatabase -Source sqlcluster -Destination sql2017 -Database WSS_Content -BackupRestore -NetworkShare \\nas\sql\migration
+Copy-DbaDatabase -Source sqlcluster -Destination sql2017 -Database WSS_Content -BackupRestore -SharedPath \\nas\sql\migration
 Copy-DbaLogin -Source sqlcluster -Destination sql2017 -Login base\sharepoint
 
 # The destination database will be read-only, change to Read-Write
-Set-DbaDatabaseState -SqlInstance sql2017 -Database WSS_Content -ReadWrite
+Set-DbaDbState -SqlInstance sql2017 -Database WSS_Content -ReadWrite
 
 # Create webapplication
 $webappname = "SharePoint - 80"
@@ -17,6 +17,8 @@ Mount-SPContentDatabase -Name WSS_Content -DatabaseServer sql2017 -WebApplicatio
 
 # Confirm
 Get-SPWebApplication -Identity http://sharepoint
+
+
 
 
 

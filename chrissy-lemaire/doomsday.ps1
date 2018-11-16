@@ -1,8 +1,8 @@
-break
+﻿break
 
 # Get yo servers - read more at dbatools.io/cms
-$site1servers = Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -Group Site1
-$site2servers = Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -Group Site2
+$site1servers = Get-DbaCmsRegServer -SqlInstance localhost\sql2016 -Group Site1
+$site2servers = Get-DbaCmsRegServer -SqlInstance localhost\sql2016 -Group Site2
 
 # See commands
 Get-Command -Name Export-DbaScript -Module dbatools -Type Function
@@ -87,10 +87,10 @@ Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -Sq
     Force = $true
 }
 
-Invoke-DbaLogShipping @params
+Invoke-DbaDbLogShipping @params
 
 # And now, failover to secondary
-Invoke-DbaLogShippingRecovery -SqlInstance localhost\sql2017 -Database shipped
+Invoke-DbaDbLogShippingRecovery -SqlInstance localhost\sql2017 -Database shipped
 
 
 <# 
@@ -135,3 +135,4 @@ Start-DbaService -ComputerName localhost -InstanceName sql2016 -Type Agent
 
 # Check if everything is back
 Invoke-Pester C:\github\community-presentations\chrissy-lemaire\doomsday.Tests.ps1
+

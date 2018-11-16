@@ -1,4 +1,4 @@
-cd presentations:\
+﻿cd presentations:\
 Return 'Oi Beardy, You may be an MVP but this is a demo, don''t run the whole thing, fool!!'
 
 ## We are going to use the development branch because it's cool and has all the latest funky
@@ -38,7 +38,7 @@ Find-DbaCommand -Pattern Index | Out-GridView -PassThru | Get-Help -Full
 
 ## Now lets migrate EVERYTHING from one to the other with one line of code :-)
 
-Start-DbaMigration -Source ROB-XPS\SQL2016 -Destination ROB-XPS\Bolton -BackupRestore -NetworkShare \\ROB-XPS\MIGRATION
+Start-DbaMigration -Source ROB-XPS\SQL2016 -Destination ROB-XPS\Bolton -BackupRestore -SharedPath \\ROB-XPS\MIGRATION
 
 ## Everyone tests their restores correct?
 ## Lets back up those new databases to a Network Share
@@ -114,10 +114,10 @@ Get-DbaBackupHistory -SqlInstance Rob-XPS\Bolton
 Get-DbaBackupHistory -SqlInstance Rob-XPS\Bolton  | select -First 1 | Select *
 
 #Restore History ?
-Get-DbaRestoreHistory -SqlInstance Rob-XPS\BOLTON -Last
+Get-DbaDbRestoreHistory -SqlInstance Rob-XPS\BOLTON -Last
 
 ## more detail
-Get-DbaRestoreHistory -SqlInstance Rob-XPS\BOLTON -Last | select -First 1 | Select *
+Get-DbaDbRestoreHistory -SqlInstance Rob-XPS\BOLTON -Last | select -First 1 | Select *
 
 # I dont have any but DbMail History
 Get-DbaDbMailHistory -SqlInstance Rob-XPS\SQL2016 
@@ -155,26 +155,26 @@ Describe "Testing my Defaults" {
 
 ## SHow me the views in a database (now we will use the SQL on Linux server because we can - but they work on Windows too!!)
 
-Get-DbaDatabaseView -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters -ExcludeSystemView
+Get-DbaDbView -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters -ExcludeSystemView
 
 ## Show Me UDFs in database or on an instance
 
-Get-DbaDatabaseUdf -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters -ExcludeSystemUdf
+Get-DbaDbUdf -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters -ExcludeSystemUdf
 
 ## Show me Database Partition functions
 
-Get-DbaDatabasePartitionFunction -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters 
+Get-DbaDbPartitionFunction -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters 
 
 # more detail
 
-Get-DbaDatabasePartitionFunction -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters | Select *
+Get-DbaDbPartitionFunction -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters | Select *
 
 ## Show Database Partition Schemes
 
-Get-DbaDatabasePartitionScheme -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters 
+Get-DbaDbPartitionScheme -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters 
 
 # more detail
-Get-DbaDatabasePartitionScheme -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters | Select *
+Get-DbaDbPartitionScheme -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters | Select *
 
 
 # Maybe you want to look at execution plans
@@ -256,10 +256,10 @@ Find-DbaCommand Find*
 
 ## What depends on this table. Which table? I'll know it when I see it (bottom one)
 
-Get-DbaTable -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters | Out-GridView -PassThru | Get-DbaDependency
+Get-DbaDbTable -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters | Out-GridView -PassThru | Get-DbaDependency
 
 ## What does that table depend on? (OrderLines)
-$Depends = Get-DbaTable -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters | Out-GridView -PassThru | Get-DbaDependency -Parents 
+$Depends = Get-DbaDbTable -SqlInstance bolton -SqlCredential $cred -Database WideWorldImporters | Out-GridView -PassThru | Get-DbaDependency -Parents 
 $Depends
 
 # but the object returns more than that lets look at the first 1
@@ -281,3 +281,10 @@ Invoke-DbaDiagnosticQuery -SqlInstance Rob-XPS\SQL2016 | Out-GridView
 $Suffix = 'Manchester_' + (Get-Date -Format yyyy-MM-dd_HH-mm-ss)
 Invoke-DbaDiagnosticQuery -SqlInstance Bolton -SqlCredential $cred | Export-DbaDiagnosticQuery -Path C:\temp\Diagnostics -Suffix $Suffix
 explorer c:\temp\diagnostics
+
+
+
+
+
+
+

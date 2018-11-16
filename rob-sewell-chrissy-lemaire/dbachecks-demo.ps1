@@ -1,4 +1,4 @@
-break
+﻿break
 
 # To get started
 Install-Module Pester -SkipPublisherCheck
@@ -17,7 +17,7 @@ Invoke-DbcCheck -SqlInstance localhost\sql2017 -Checks ValidDatabaseOwner
 
 # Make a server list
 $servers = "localhost\sql2017","localhost\sql2016"
-$servers = Get-DbaRegisteredServer -SqlInstance localhost\sql2017
+$servers = Get-DbaCmsRegServer -SqlInstance localhost\sql2017
 $servers = Get-Content C:\scripts\servers.txt
 $servers = Get-ADComputer -Filter "name -like '*sql*'"
 

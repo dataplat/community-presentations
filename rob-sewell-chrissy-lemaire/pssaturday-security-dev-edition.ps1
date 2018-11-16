@@ -1,4 +1,4 @@
-# Don't run everything, thanks @alexandair!
+﻿# Don't run everything, thanks @alexandair!
 break
 
 # IF THIS SCRIPT IS RUN ON LOCAL SQL INSTANCES, YOU MUST RUN ISE OR POWERSHELL AS ADMIN
@@ -48,15 +48,15 @@ Invoke-Item C:\temp\logins.sql
 # Other Exports
 Get-DbaAgentJob -SqlInstance $old | Export-DbaScript -Path C:\temp\jobs.sql
 
-# Reset-SqlAdmin
-Reset-SqlAdmin -SqlInstance $instance -Login sqladmin -Verbose
+# Reset-DbaAdmin
+Reset-DbaAdmin -SqlInstance $instance -Login sqladmin -Verbose
 
 # Build ref!
-$allservers | Get-DbaSqlBuildReference | Format-Table
+$allservers | Get-DbaBuildReference | Format-Table
 
 # SQL Modules - View, TableValuedFunction, DefaultConstraint, StoredProcedure, Rule, InlineTableValuedFunction, Trigger, ScalarFunction
-Get-DbaSqlModule -SqlInstance $instance -ModifiedSince (Get-Date).AddDays(-7) | Out-GridView
-Get-DbaSqlModule -SqlInstance $instance -ModifiedSince (Get-Date).AddDays(-7) | Select-String -Pattern sp_executesql
+Get-DbaModule -SqlInstance $instance -ModifiedSince (Get-Date).AddDays(-7) | Out-GridView
+Get-DbaModule -SqlInstance $instance -ModifiedSince (Get-Date).AddDays(-7) | Select-String -Pattern sp_executesql
 
 # Reads trace files - default trace by default
 Read-DbaTraceFile -SqlInstance $instance | Out-GridView
@@ -96,7 +96,7 @@ Get-DbaServerProtocol -ComputerName $instance | Out-GridView
 Get-DbaSpConfigure -SqlInstance $instance | Out-GridView
 
 # Get the registry root
-Get-DbaSqlRegistryRoot -ComputerName $instance
+Get-DbaRegistryRoot -ComputerName $instance
 
 #region SPN
 Start-Process "C:\Program Files\Microsoft\Kerberos Configuration Manager for SQL Server\KerberosConfigMgr.exe"
@@ -123,7 +123,7 @@ Find-DbaOrphanedFile -SqlInstance $instance | Out-GridView
 Find-DbaOrphanedFile -SqlInstance $instance -LocalOnly | Remove-Item -Whatif
 
 # OGV madness
-Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -NetworkShare \\workstation\c$\temp -Force
+Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -SharedPath \\workstation\c$\temp -Force
 
 # Find it! - JSON file powers command and website
 Find-DbaCommand Backup
@@ -132,3 +132,7 @@ Find-DbaCommand -Tag Backup | Out-GridView
 # Thanks, Fred! 
 [dbainstance]"sql2016"
 [dbainstance]"sqlcluster\sharepoint"
+
+
+
+

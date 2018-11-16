@@ -5,7 +5,7 @@
     }
 
     It "Still has all the logins" {
-        $results = Get-DbaLogin -SqlInstance workstation\sql2016 
+        $results = Get-DbaErrorLogin -SqlInstance workstation\sql2016 
         'WORKSTATION\powershell','login1','login2','login3','login4','login5' | Should -BeIn $results.Name
     }
 
@@ -35,12 +35,12 @@
     }
 
     It "Still has all the registered servers" {
-        $results = Get-DbaRegisteredServer -SqlInstance workstation\sql2016 
+        $results = Get-DbaCmsRegServer -SqlInstance workstation\sql2016 
         'sql2016','sql2017' | Should -BeIn $results.Name
     }
 
     It "Still has all the registered server groups" {
-        $results = Get-DbaRegisteredServerGroup -SqlInstance workstation\sql2016 
+        $results = Get-DbaCmsRegServerGroup -SqlInstance workstation\sql2016 
         'Site1','Site2' | Should -BeIn $results.Name
     }
     It "Still has all the backup devices" {
@@ -123,3 +123,4 @@
         'Audit-20160502-100608', 'Audit-20170210-150427' | Should -BeIn $results.Name
     }
 }
+
