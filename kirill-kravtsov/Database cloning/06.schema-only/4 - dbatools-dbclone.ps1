@@ -1,0 +1,1 @@
+Invoke-DbaDbClone -SqlInstance 'localhost' -Database 'AdventureWorksLT2012' -CloneDatabase 'AdventureWorksLT2012_clone_6.4'
