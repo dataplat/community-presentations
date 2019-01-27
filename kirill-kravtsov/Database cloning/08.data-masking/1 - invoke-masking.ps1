@@ -11,10 +11,11 @@ Get-DbaBackupHistory -SqlInstance localhost -Database AdventureWorksLT2012 | Res
 
 # create a masking config file
 New-Item C:\Temp\clone -ItemType Directory -Force
-New-DbaDbMaskingConfig -SqlInstance 'localhost' -Database 'AdventureWorksLT2012_clone_8.1' -Path C:\Temp\clone
+$mask = New-DbaDbMaskingConfig -SqlInstance 'localhost' -Database 'AdventureWorksLT2012_clone_8.1' -Path C:\Temp\clone
+$mask
 
-# check what's there
-code C:\Temp\clone
+# check what's inside
+code $mask
 
 # initialize masking process
-Invoke-DbaDbDataMasking -SqlInstance 'localhost' -Database 'AdventureWorksLT2012_clone_8.1' -FilePath C:\Temp\clone
+Invoke-DbaDbDataMasking -SqlInstance 'localhost' -Database 'AdventureWorksLT2012_clone_8.1' -FilePath .\08.data-masking\masking.json

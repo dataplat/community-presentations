@@ -16,7 +16,7 @@ $servers = @($server1, $server2)
 # Cleanup
 $backupFiles = Get-ChildItem $labFolder -Include '*.bak' -Recurse | Read-DbaBackupHeader -ServerInstance $server1
 Remove-DbaDatabase -SqlInstance $instances -Database $backupFiles.DatabaseName -Confirm:$false
-Remove-DbaDatabase -SqlInstance $instances -Database *clone* -Confirm:$false
+Get-DbaDatabase -SqlInstance $instances | ? Name -like *_clone_* | Remove-DbaDatabase -Confirm:$false
 
 
 #Remove old backups
@@ -39,15 +39,7 @@ Get-ChildItem $labFolder -Include '*.sql' -Recurse | % { $server1.Invoke((Get-Co
 #Run backups
 foreach ($type in 'Full', 'Log', 'Diff', 'Log', 'Log') {
     Write-Host "Running $type backups"
-    Get-DbaAgentJob -SqlInstance $instance1 | Where name -match $type| Start-DbaAgentJob -Wait
+    Get-DbaAgentJob -SqlInstance $instance1 | ? name -match $type| Start-DbaAgentJob -Wait
     (Get-DbaDatabase -SqlInstance $instance1).Invoke('CHECKPOINT')
 
 }
-
-#Set server parameters
-Set-DbaMaxMemory -SqlInstance $server1 -MaxMB 1024
-Set-DbaMaxDop -SqlInstance $server1 -MaxDop 1
-Set-DbaSpConfigure -SqlInstance $server1 -Config IsSqlClrEnabled -Value $true
-
-Set-DbaMaxMemory -SqlInstance $server2 -MaxMB 5120
-Set-DbaMaxDop -SqlInstance $server2 -MaxDop 0

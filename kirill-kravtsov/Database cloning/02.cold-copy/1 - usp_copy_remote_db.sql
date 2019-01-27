@@ -13,7 +13,7 @@ GO
 -- Create date: 2015-07-17
 -- Description:	Delete file from a remote server, converting local file path to the UNC
 -- =============================================
-CREATE PROCEDURE usp_remote_file_delete
+ALTER PROCEDURE usp_remote_file_delete
 (
 	@Filename nvarchar(max)
    ,@RemoteServer nvarchar(128) = @@SERVERNAME
