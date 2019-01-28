@@ -1,3 +1,6 @@
+# Author Sander Stad: https://github.com/sanderstad
+# Internally uses bogus for data generation: https://github.com/bchavez/Bogus
+
 # restore a database
 $params = @{
     SqlInstance          = 'localhost'
