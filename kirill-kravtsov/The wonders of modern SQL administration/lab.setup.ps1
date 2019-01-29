@@ -1,4 +1,4 @@
-
+﻿
 # Constants
 
 $instance1 = 'localhost'
@@ -22,7 +22,7 @@ $backupFiles = Get-ChildItem $labFolder -Include '*.bak' -Recurse | Read-DbaBack
 Remove-DbaDatabase -SqlInstance $instances -Database $backupFiles.DatabaseName -Confirm:$false
 Remove-DbaDatabase -SqlInstance $instances -Database WonderDB -Confirm:$false
 
-if ($l = Get-DbaLogin -SqlInstance $instances -Login $logins) {
+if ($l = Get-DbaErrorLogin -SqlInstance $instances -Login $logins) {
     Get-DbaProcess -SqlInstance $instances -Login $logins | Stop-DbaProcess
     $l.Drop()
 }
@@ -98,3 +98,4 @@ Set-DbaMaxDop -SqlInstance $server2 -MaxDop 0
 
 #Create new credential
 New-DbaCredential -SqlInstance $server1  -CredentialIdentity 'NewCred' -Password $sPassword -Force
+

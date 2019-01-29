@@ -1,4 +1,4 @@
-$Bolton = Connect-DbaSqlServer -SqlInstance 'Rob-XPS\Bolton'
+﻿$Bolton = Connect-DbaSqlServer -SqlInstance 'Rob-XPS\Bolton'
 $SQL2016 = Connect-DbaSqlServer -SqlInstance 'Rob-XPS\SQL2016'
 $cred = Import-Clixml C:\MSSQL\sa.cred 
 $LinuxBolton = Connect-DbaSqlServer -SqlInstance Bolton -Credential $cred
@@ -123,7 +123,7 @@ $Links | ForEach-Object {$_.DropIfExists($true)}
 
 ## Remove table from DBA-Admin
 
-(Get-DbaTable -SqlInstance Rob-XPS\SQL2016 -Database DBA-Admin -Table ManchesterDemo).Drop() 
+(Get-DbaDbTable -SqlInstance Rob-XPS\SQL2016 -Database DBA-Admin -Table ManchesterDemo).Drop() 
 <# 
 # CLEANUP
 

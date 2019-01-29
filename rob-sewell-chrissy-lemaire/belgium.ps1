@@ -1,4 +1,4 @@
-# Don't run everything, thanks @alexandair!
+﻿# Don't run everything, thanks @alexandair!
 break
 
 # IF THIS SCRIPT IS RUN ON LOCAL SQL INSTANCES, YOU MUST RUN ISE OR POWERSHELL AS ADMIN
@@ -18,7 +18,7 @@ $old = $instance = "localhost"
 $allservers = $old, $new
 
 # db space
-Get-DbaDatabaseSpace -SqlInstance $new -IncludeSystemDBs | Out-GridView
+Get-DbaDbSpace -SqlInstance $new -IncludeSystemDBs | Out-GridView
 
 #region backuprestore
 
@@ -51,15 +51,15 @@ Invoke-Item C:\temp\logins.sql
 # Other Exports
 Get-DbaAgentJob -SqlInstance $old | Export-DbaScript -Path C:\temp\jobs.sql
 
-# Reset-SqlAdmin
-Reset-SqlAdmin -SqlInstance $instance -Login sqladmin -Verbose
+# Reset-DbaAdmin
+Reset-DbaAdmin -SqlInstance $instance -Login sqladmin -Verbose
 
 # Build ref!
-$allservers | Get-DbaSqlBuildReference | Format-Table
+$allservers | Get-DbaBuildReference | Format-Table
 
 # SQL Modules - View, TableValuedFunction, DefaultConstraint, StoredProcedure, Rule, InlineTableValuedFunction, Trigger, ScalarFunction
-Get-DbaSqlModule -SqlInstance $instance | Out-GridView
-Get-DbaSqlModule -SqlInstance $instance -ModifiedSince (Get-Date).AddDays(-7) | Select-String -Pattern sp_executesql
+Get-DbaModule -SqlInstance $instance | Out-GridView
+Get-DbaModule -SqlInstance $instance -ModifiedSince (Get-Date).AddDays(-7) | Select-String -Pattern sp_executesql
 
 # Reads trace files - default trace by default
 Read-DbaTraceFile -SqlInstance $instance | Out-GridView
@@ -98,7 +98,7 @@ invoke-item C:\github\dbatools\tests\Get-DbaSchemaChangeHistory.Tests.ps1
 Invoke-Item C:\github\dbatools\tests
 
 # Database clone
-Invoke-DbaDatabaseClone -SqlInstance $new -Database dbwithsprocs -CloneDatabase dbwithsprocs_clone
+Invoke-DbaDbClone -SqlInstance $new -Database dbwithsprocs -CloneDatabase dbwithsprocs_clone
 
 # Process exploration
 Get-DbaProcess -SqlInstance $instance | Out-GridView
@@ -113,7 +113,7 @@ Get-DbaServerProtocol -ComputerName $instance | Out-GridView
 Get-DbaSpConfigure -SqlInstance $instance | Out-GridView
 
 # Get the registry root
-Get-DbaSqlRegistryRoot -ComputerName $instance
+Get-DbaRegistryRoot -ComputerName $instance
 
 #region SPN
 Start-Process "C:\Program Files\Microsoft\Kerberos Configuration Manager for SQL Server\KerberosConfigMgr.exe"
@@ -138,7 +138,7 @@ Find-DbaOrphanedFile -SqlInstance $instance | Out-GridView
 Find-DbaOrphanedFile -SqlInstance $instance -LocalOnly | Remove-Item -Whatif
 
 # OGV madness
-Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -NetworkShare \\workstation\c$\temp -Force
+Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -SharedPath \\workstation\c$\temp -Force
 
 # Find it! - JSON file powers command and website
 Find-DbaCommand Backup
@@ -149,8 +149,18 @@ Find-DbaCommand -Tag Backup | Out-GridView
 [dbainstance]"sqlcluster\sharepoint"
 
 # Coming soon, more on Xevents!
-Get-DbaXEventSession -SqlInstance $new
-Get-DbaXEventSession -SqlInstance $new -Session system_health | Read-DbaXEventFile
-Get-DbaXEventSession -SqlInstance $new -Session system_health | Watch-DbaXEventSession | Select -ExpandProperty Fields
+Get-DbaXESession -SqlInstance $new
+Get-DbaXESession -SqlInstance $new -Session system_health | Read-DbaXEFile
+Get-DbaXESession -SqlInstance $new -Session system_health | Watch-DbaXESession | Select -ExpandProperty Fields
 
 Invoke-Item C:\github\community-presentations\rob-sewell-chrissy-lemaire\belgium-watch-xeventsession.png
+
+
+
+
+
+
+
+
+
+

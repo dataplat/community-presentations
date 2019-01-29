@@ -1,4 +1,4 @@
-### Original authors: @cl and @ck
+﻿### Original authors: @cl and @ck
 # Don't run everything
 break
 
@@ -99,11 +99,11 @@ Test-DbaIdentityUsage -SqlInstance $instance | Out-GridView
 ######## DB SPACE ########
 
 # Get Db Free Space AND write it to table
-Get-DbaDatabaseSpace -SqlInstance $instance | Out-GridView
+Get-DbaDbSpace -SqlInstance $instance | Out-GridView
 
-Get-DbaDatabaseSpace -SqlInstance $instance -IncludeSystemDB | Out-DbaDataTable | Write-DbaDataTable -SqlInstance $instance -Database tempdb -Table DiskSpaceExample -AutoCreateTable
+Get-DbaDbSpace -SqlInstance $instance -IncludeSystemDB | ConvertTo-DbaDataTable | Write-DbaDataTable -SqlInstance $instance -Database tempdb -Table DiskSpaceExample -AutoCreateTable
 
-Invoke-Sqlcmd2 -ServerInstance $instance -Database tempdb -Query 'SELECT * FROM dbo.DiskSpaceExample' | Out-GridView
+Invoke-DbaQuery -ServerInstance $instance -Database tempdb -Query 'SELECT * FROM dbo.DiskSpaceExample' | Out-GridView
 
 
 ######## END OF DB SPACE  ########
@@ -117,15 +117,15 @@ $allservers | Test-DbaMaxMemory | Where-Object { $_.SqlMaxMB -gt $_.TotalMB } | 
 Set-DbaMaxMemory -SqlInstance $instance -MaxMb 1023
 
 # RecoveryModel
-Test-DbaFullRecoveryModel -SqlInstance $new
-Test-DbaFullRecoveryModel -SqlInstance $new | Where { $_.ConfiguredRecoveryModel -ne $_.ActualRecoveryModel }
+Test-DbaDbRecoveryModel -SqlInstance $new
+Test-DbaDbRecoveryModel -SqlInstance $new | Where { $_.ConfiguredRecoveryModel -ne $_.ActualRecoveryModel }
 
 
 # Testing sql server linked server connections
 Test-DbaLinkedServerConnection -SqlInstance $instance
 
 # Some vlfs
-$allservers | Test-DbaVirtualLogFile | Where-Object {$_.Count -ge 50} | Sort-Object Count -Descending | Out-GridView
+$allservers | Test-DbaDbVirtualLogFile | Where-Object {$_.Count -ge 50} | Sort-Object Count -Descending | Out-GridView
 
 
 ######## END OF Blogpost-inspired ########
@@ -139,14 +139,14 @@ $instance | Install-DbaMaintenanceSolution -ReplaceExisting -BackupLocation \\lo
 Reset-DbaAdmin -SqlInstance $instance -Login sqladmin -Verbose
 
 # Services
-Get-DbaSqlService -Instance I2
+Get-DbaService -Instance I2
 
 # Changing service account back and forth
-$login = (Get-DbaSqlService -Instance I2 -Type Agent).StartName
-Get-DbaSqlService -Instance I2 -Type Agent | Update-DbaSqlServiceAccount -Username 'Local system'
+$login = (Get-DbaService -Instance I2 -Type Agent).StartName
+Get-DbaService -Instance I2 -Type Agent | Update-DbaServiceAccount -Username 'Local system'
 
-Update-DbaSqlServiceAccount -ServiceName 'SqlAgent$I2' -Username $login
-Get-DbaSqlService -Instance I2 | Restart-DbaSqlService
+Update-DbaServiceAccount -ServiceName 'SqlAgent$I2' -Username $login
+Get-DbaService -Instance I2 | Restart-DbaService
 
 # Find user owned objects
 Find-DbaUserObject -SqlInstance $instance -Pattern sa
@@ -160,7 +160,7 @@ Install-DbaWhoIsActive -SqlInstance $instance -Database master
 Invoke-DbaWhoisActive -SqlInstance $instance -ShowOwnSpid | Out-GridView
 
 # Build reference
-$allservers | Get-DbaSqlBuildReference | Format-Table
+$allservers | Get-DbaBuildReference | Format-Table
 
 # sp_configure
 Get-DbaSpConfigure -SqlInstance $old
@@ -180,7 +180,7 @@ $propcompare | Out-GridView
 Copy-DbaSpConfigure -Source $old -Destination $new -Config DefaultBackupCompression, IsSqlClrEnabled
 
 # Copy database
-Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -NetworkShare \\localhost\backups -Force
+Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -SharedPath \\localhost\backups -Force
 
 # Drop databases
 Get-DbaDatabase -SqlInstance $new -ExcludeAllSystemDb | Remove-DbaDatabase
@@ -190,6 +190,16 @@ Copy-DbaSSISCatalog -Source $old -Destination $new
 
 # Copy... everything!
 Start-DbaMigration -Source $old -Destination $new -BackupRestore \\localhost\backups -Force
+
+
+
+
+
+
+
+
+
+
 
 
 
