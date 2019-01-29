@@ -4,10 +4,10 @@ DECLARE @date datetime
 DECLARE @filemap nvarchar(max)
 DECLARE @mirror int
 DECLARE @use_copy_only int
-SET @source_db = 'AdventureWorks'
+SET @source_db = 'AdventureWorksLT2012'
 SET @dest_db = 'AdventureWorks_clone'
 SET @date = null
-SET @filemap = '*DATA*->C:\Data;*LOGS*->C:\Logs'
+SET @filemap = '*DATA*->C:\Data\clone_*;*LOGS*->C:\Logs\clone_*'
 SET @mirror = 0
 SET @use_copy_only = 0
 
