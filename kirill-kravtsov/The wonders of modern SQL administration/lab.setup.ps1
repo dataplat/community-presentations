@@ -1,5 +1,4 @@
-﻿
-# Constants
+﻿# Constants
 
 $instance1 = 'localhost'
 $instance2 = 'localhost\I2'
@@ -86,7 +85,7 @@ foreach ($type in 'Full','Log','Diff','Log','Log') {
 }
 
 #Grant database permissions
-$logins | % { (Get-DbaDatabase -SqlInstance $instance1 -ExcludeAllSystemDb).Invoke("CREATE USER [$_] FOR LOGIN [$_]; ALTER ROLE db_datareader ADD MEMBER [$_]") }
+$logins | % { (Get-DbaDatabase -SqlInstance $instance1 -ExcludeSystem).Invoke("CREATE USER [$_] FOR LOGIN [$_]; ALTER ROLE db_datareader ADD MEMBER [$_]") }
 
 #Set server parameters
 Set-DbaMaxMemory -SqlInstance $server1 -MaxMB 1024
@@ -98,4 +97,3 @@ Set-DbaMaxDop -SqlInstance $server2 -MaxDop 0
 
 #Create new credential
 New-DbaCredential -SqlInstance $server1  -CredentialIdentity 'NewCred' -Password $sPassword -Force
-

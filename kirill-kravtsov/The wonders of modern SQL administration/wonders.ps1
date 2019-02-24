@@ -183,25 +183,10 @@ Copy-DbaSpConfigure -Source $old -Destination $new -Config DefaultBackupCompress
 Get-DbaDatabase -SqlInstance $old | Out-GridView -PassThru | Copy-DbaDatabase -Destination $new -BackupRestore -SharedPath \\localhost\backups -Force
 
 # Drop databases
-Get-DbaDatabase -SqlInstance $new -ExcludeAllSystemDb | Remove-DbaDatabase
+Get-DbaDatabase -SqlInstance $new -ExcludeSystem | Remove-DbaDatabase
 
 # Copy SSIS catalog
 Copy-DbaSSISCatalog -Source $old -Destination $new
 
 # Copy... everything!
 Start-DbaMigration -Source $old -Destination $new -BackupRestore \\localhost\backups -Force
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

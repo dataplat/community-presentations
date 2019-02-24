@@ -108,8 +108,8 @@ Write-DbaDataTable -SqlServer $centralServer -Database $centralDB -InputObject $
 <#
    Get jobs owner 
 #>
-Write-Output "Will run Test-DbaJobOwner" 
-$JobsOwner = Test-DbaJobOwner -SqlServer $serverList -SqlCredential $SqlCredential -Detailed | ConvertTo-DbaDataTable
+Write-Output "Will run Test-DbaAgentJobOwner" 
+$JobsOwner = Test-DbaAgentJobOwner -SqlServer $serverList -SqlCredential $SqlCredential -Detailed | ConvertTo-DbaDataTable
 Write-DbaDataTable -SqlServer $centralServer -Database $centralDB -InputObject $JobsOwner -Table JobsOwner -AutoCreateTable
 
 
@@ -228,16 +228,3 @@ Write-DbaDataTable -SqlServer $centralServer -Database $centralDB -InputObject $
 
 Write-Output "Number of servers: $($serverList.Count)"
 $start.elapsed
-
-
-
-
-
-
-
-
-
-
-
-
-

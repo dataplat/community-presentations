@@ -125,7 +125,7 @@ $allservers | Test-DbaDbVirtualLogFile | Where-Object {$_.Count -ge 50} | Sort-O
 # Find-DbaStoredProcdure - @claudioessilva, @cl, Stephen Bennett
 # 37,545 SQL Server stored procedures on 9 servers evaluated in 8.67 seconds!
 
-$new | Get-DbaDatabase -ExcludeDatabase anotherdb -NoSystemDb | Remove-DbaDatabase | Out-Null
+$new | Get-DbaDatabase -ExcludeDatabase anotherdb -ExcludeSystemLoginsDb | Remove-DbaDatabase | Out-Null
 $new | Find-DbaStoredProcedure -Pattern dbatools
 $new | Find-DbaStoredProcedure -Pattern dbatools | Select * | Out-GridView
 $new | Find-DbaStoredProcedure -Pattern '\w+@\w+\.\w+'
@@ -205,10 +205,3 @@ Get-DbaSpConfigure -SqlInstance $new | Where-Object { $_.ConfigName -in 'Default
 Select-Object ConfigName, RunningValue, IsRunningDefaultValue | Format-Table -AutoSize
 
 #endregion
-
-
-
-
-
-
-

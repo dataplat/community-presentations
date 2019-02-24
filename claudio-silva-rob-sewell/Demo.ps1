@@ -168,14 +168,14 @@ Invoke-SQLCmd2 -ServerInstance $singleServer -Database AdventureWorks2014 -Query
 
 ## But we can quickly and easily see that
 
-Test-DbaIdentityUsage -SqlInstance ROB-XPS -NoSystemDb -Threshold 70 | ogv
+Test-DbaIdentityUsage -SqlInstance ROB-XPS -ExcludeSystemLoginsDb -Threshold 70 | ogv
 
 ## You can look at a whole server
-Test-DbaIdentityUsage -SqlInstance ROB-XPS -NoSystemDb | ogv
+Test-DbaIdentityUsage -SqlInstance ROB-XPS -ExcludeSystemLoginsDb | ogv
 
 ## or a number of servers
 
-Test-DbaIdentityUsage -SqlInstance $2016Servers -NoSystemDb | Ogv
+Test-DbaIdentityUsage -SqlInstance $2016Servers -ExcludeSystemLoginsDb | Ogv
 
 
 ## 30 minutes
@@ -386,18 +386,3 @@ Backup-DbaDatabase -SqlInstance sql2016n1 -Databases Viennadbareports -BackupDir
 
 $Config = (Get-Content TestConfig.JSON) -join "`n" | ConvertFrom-Json
 Invoke-Pester
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,5 +1,4 @@
-﻿
-<## NEED TO ADD NEW / CHANGED SERVERS RMS  #>
+﻿<## NEED TO ADD NEW / CHANGED SERVERS RMS  #>
 <# Set up and pre sessio test to make sure all is ok #>
 
 <#
@@ -222,7 +221,7 @@ Describe "Testing for Demo"{
         (Connect-DbaSqlServer SQL2012Ser08AG3).Configuration.MaxServerMemory.RunValue | Should Be 2147483647
     }
     It "ShiftID LastValue Should be 255" {
-        $a = Test-DbaIdentityUsage -SqlInstance ROB-XPS -Databases AdventureWorks2014 -NoSystemDb
+        $a = Test-DbaIdentityUsage -SqlInstance ROB-XPS -Databases AdventureWorks2014 -ExcludeSystemLoginsDb
         $a.Where{$_.Column -eq 'ShiftID'}.LastValue | should Be 255
     }
     It "Uses TheBeard\Rob"{

@@ -66,7 +66,7 @@ $Files.RemoteFileName  | Remove-Item -WhatIf
 Get-Help Remove-DbaDatabaseSafely -Online
 Remove-DbaDatabaseSafely -SqlInstance sql2008 -Database dbOrphanUsers -BackupFolder "\\nas\sql\sqlgrillen\dbOrphanUsers" -Verbose
 
-<# Repair-DbaOrphanUser #>
+<# Repair-DbaDbOrphanUser #>
 
 ## Refresh database
 $source = "sql2008"
@@ -75,7 +75,7 @@ $databaseToRefresh = "db1"
 
 Backup-DbaDatabase -SqlInstance $source -Database $databaseToRefresh -BackupDirectory "\\nas\sql\sqlgrillen" -CompressBackup | Restore-DbaDatabase -SqlInstance $destination -WithReplace
 
-Repair-DbaOrphanUser -SqlInstance $destination -Database $databaseToRefresh -Verbose -WhatIf
+Repair-DbaDbOrphanUser -SqlInstance $destination -Database $databaseToRefresh -Verbose -WhatIf
 
 
 break
@@ -147,7 +147,3 @@ $sqlservers | Test-DbaSpn | Out-GridView -PassThru | Set-DbaSpn -Whatif
 Get-DbaSpn | Remove-DbaSpn -Whatif
 
 $sqlservers | Test-DbaSpn -Credential (Get-Credential)
-
-
-
-

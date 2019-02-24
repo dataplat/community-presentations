@@ -112,7 +112,7 @@ Start-Process "C:\github\community-presentations\constantine-kokkinos-chrissy-le
 # Find-DbaStoredProcdure - @claudioessilva, @cl, Stephen Bennett
 # 37,545 SQL Server stored procedures on 9 servers evaluated in 8.67 seconds!
 
-$new | Get-DbaDatabase -ExcludeDatabase anotherdb -NoSystemDb | Remove-DbaDatabase | Out-Null
+$new | Get-DbaDatabase -ExcludeDatabase anotherdb -ExcludeSystemLoginsDb | Remove-DbaDatabase | Out-Null
 $new | Find-DbaStoredProcedure -Pattern dbatools
 $new | Find-DbaStoredProcedure -Pattern dbatools | Select * | Out-GridView
 $new | Find-DbaStoredProcedure -Pattern '\w+@\w+\.\w+'
@@ -132,7 +132,3 @@ Find-DbaCommand -Tag Backup | Out-GridView
 # Thanks, Fred! 
 [dbainstance]"sql2016"
 [dbainstance]"sqlcluster\sharepoint"
-
-
-
-

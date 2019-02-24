@@ -57,7 +57,7 @@ Get-DbaSpn | Remove-DbaSpn -Whatif
 #endregion
 
 # region cleanup real quick
-# Get-DbaDatabase -SqlInstance $new -NoSystemDb | Remove-DbaDatabase
+# Get-DbaDatabase -SqlInstance $new -ExcludeSystemLoginsDb | Remove-DbaDatabase
 # end region
 
 #region holiday
@@ -209,11 +209,3 @@ Get-DbaSpConfigure -SqlInstance $new | Where-Object { $_.ConfigName -in 'Default
 Select-Object ConfigName, RunningValue, IsRunningDefaultValue | Format-Table -AutoSize
 
 #endregion
-
-
-
-
-
-
-
-
