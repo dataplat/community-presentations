@@ -96,7 +96,6 @@ Invoke-DbaDbLogShippingRecovery -SqlInstance localhost\sql2017 -Database shipped
 <# 
 
     Introducing Export-DbaInstance
-    Written for #SQLGLA!
 
 #>
 
