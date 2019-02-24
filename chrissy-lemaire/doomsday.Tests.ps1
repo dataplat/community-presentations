@@ -5,7 +5,7 @@
     }
 
     It "Still has all the logins" {
-        $results = Get-DbaErrorLogin -SqlInstance workstation\sql2016 
+        $results = Get-DbaLogin -SqlInstance workstation\sql2016 
         'WORKSTATION\powershell','login1','login2','login3','login4','login5' | Should -BeIn $results.Name
     }
 
