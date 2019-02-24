@@ -132,3 +132,8 @@ Start-DbaService -ComputerName localhost -InstanceName sql2016 -Type Agent
 # Check if everything is back
 Invoke-Pester C:\github\community-presentations\chrissy-lemaire\bits-dr.Tests.ps1
 
+
+
+
+
+# GIVEAWAY!
