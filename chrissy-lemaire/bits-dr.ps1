@@ -50,17 +50,14 @@ Backup-DbaDbMasterKey -SqlInstance workstation\sql2016 -Path \\localhost\backups
 Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - SYSTEM_DATABASES - FULL','DatabaseBackup - USER_DATABASES - FULL'
 Get-DbaRunningJob -SqlInstance localhost\sql2016
 
-Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - USER_DATABASES - DIFF'
-Get-DbaRunningJob -SqlInstance localhost\sql2016
+Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - USER_DATABASES - DIFF' -Wait
 
-Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - USER_DATABASES - LOG'
-Get-DbaRunningJob -SqlInstance localhost\sql2016
+Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - USER_DATABASES - LOG' -Wait
 
-Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - USER_DATABASES - LOG'
-Get-DbaRunningJob -SqlInstance localhost\sql2016
+Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - USER_DATABASES - LOG' -Wait
 
-Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - USER_DATABASES - LOG'
-Get-DbaRunningJob -SqlInstance localhost\sql2016
+Start-DbaAgentJob -SqlInstance localhost\sql2016 -Job 'DatabaseBackup - USER_DATABASES - LOG' -Wait
+
 
 Get-ChildItem -Directory '\\localhost\backups\WORKSTATION$SQL2016' | Restore-DbaDatabase -SqlInstance localhost\sql2017 -OutputScriptOnly -WithReplace | Out-File -Filepath c:\temp\restore.sql
 Invoke-Item c:\temp\restore.sql
@@ -90,7 +87,7 @@ Get-ChildItem -Directory \\workstation\backups\sql2012 | Restore-DbaDatabase -Sq
 Invoke-DbaDbLogShipping @params
 
 # And now, failover to secondary
-Invoke-DbaDbLogShippingRecovery -SqlInstance localhost\sql2017 -Database shipped
+Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database shipped
 
 
 <# 
