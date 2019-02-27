@@ -20,7 +20,7 @@ Get-DbaAgentJob -SqlInstance workstation\sql2016 | Select -First 1 | Export-DbaS
 Get-DbaAgentJob -SqlInstance workstation\sql2016 | Select -First 1 | Export-DbaScript | Invoke-Item
 
 # Raw output and add a batch separator
-Get-DbaAgentJob -SqlInstance workstation\sql2016 | Export-DbaScript -Passthru -BatchSeparator GO
+Get-DbaAgentJob -SqlInstance workstation\sql2016, workstation\sql2017 | Export-DbaScript -Passthru -BatchSeparator GO
 
 # Get crazy
 #Set Scripting Options
@@ -131,6 +131,10 @@ Start-DbaService -ComputerName localhost -InstanceName sql2016 -Type Agent
 
 # Check if everything is back
 Invoke-Pester C:\github\community-presentations\chrissy-lemaire\bits-dr.Tests.ps1
+
+
+
+
 
 
 
