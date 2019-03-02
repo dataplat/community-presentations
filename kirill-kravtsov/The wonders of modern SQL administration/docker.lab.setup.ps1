@@ -19,8 +19,8 @@ if ($linuxBackupFolder.Contains(':')) {
 $linuxBackupFolder = $linuxBackupFolder -replace '\\', '/'
 
 # remove old containers
-docker stop dockersql1; docker stop dockersql2
-docker rm dockersql1; docker rm dockersql2
+docker stop dockersql1 dockersql2
+docker rm dockersql1 dockersql2
 
 # create a shared network
 docker network create localnet

@@ -199,7 +199,7 @@ Invoke-DbaWhoisActive -SqlInstance $instance -ShowOwnSpid
 
 # Build reference
 $allservers | Get-DbaBuildReference | Format-Table
-$allservers | Test-DbaBuild -Latest | Format-Table -AutoSize
+$allservers | Test-DbaBuild -MaxBehind 0CU | Format-Table -AutoSize
 
 # Updates - Windows only
 # Update-DbaInstance -Path c:\updates
