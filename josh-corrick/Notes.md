@@ -1,0 +1,1 @@
+Presentation was originally supposed to be on migrating data from one instance to another, but upon talking with the attendees no one knew much about PowerShell, so it turned into a Powershell/Dbatools for beginners
