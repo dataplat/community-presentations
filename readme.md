@@ -11,6 +11,7 @@ Once you have uploaded your presentation, and optionally, code, please update th
 
 | Session Title  | Speaker(s) | Slides | Scripts | Videos |
 | ------------- | ------------- | ------------- | ------------- | ------------- |
+|Always Encrypted Introduction | Justin Dearing | [Slides](https://github.com/sqlcollaborative/community-presentations/raw/master/justin-dearing/always-encrypted-intro.pptx) | [Code](https://github.com/sqlcollaborative/community-presentations/raw/master/justin-dearing/always-encrypted-intro.ipynv) |
 |Backups, Restores and dbatools | Stuart Moore | [Slides](https://github.com/sqlcollaborative/community-presentations/raw/master/stuart-moore/backups-restores-and-dbatools.pptx) | [Code](https://github.com/sqlcollaborative/community-presentations/raw/master/stuart-moore/backups-restores-and-dbatools-scripts.zip) | [Video](https://www.youtube.com/watch?v=-q074XVYVPw) |
 | dbatools is magic  | Chrissy LeMaire | [Slides](https://github.com/sqlcollaborative/community-presentations/raw/master/chrissy-lemaire/dbatools-is-magic.pptx) | [Code](https://github.com/sqlcollaborative/community-presentations/raw/master/chrissy-lemaire/journey-to-200k-rows-sec-code.zip) |
 | PowerShell 10 Year Anniversary  | Aaron Nelson, Chrissy LeMaire | [Slides](https://github.com/sqlcollaborative/community-presentations/raw/master/chrissy-lemaire-aaron-nelson/powershell-10th-anniversary.pptx) |  | [Video](https://channel9.msdn.com/Events/PowerShell-Team/PowerShell-10-Year-Anniversary/SQL-Server-Cmdlets-and-Community-Involvement)
