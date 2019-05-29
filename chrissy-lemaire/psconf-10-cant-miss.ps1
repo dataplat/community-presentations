@@ -8,7 +8,7 @@ Get-DbaRegisteredServer -Name psdbatools.database.windows.net | Connect-DbaInsta
 
 # CSV galore! Delete Maximo Park
 Get-ChildItem C:\csv
-Get-ChildItem C:\csv | Import-DbaCsv -SqlInstance localhost\sql2017 -Database tempdb -AutoCreateTable
+Get-ChildItem C:\csv | Import-DbaCsv -SqlInstance localhost\sql2017 -Database tempdb -AutoCreateTable -Encoding  ([System.Text.Encoding]::UTF8)
 
 # Query
 # displays messages (aka print or raiserror) nicely, without interfering with the resultset, and asynchronously
@@ -20,6 +20,26 @@ Find-DbaInstance -ComputerName localhost
 
 Invoke-DbaDbMasking / Invoke-DbaDbDataGenerator
 Invoke-DbaLogShipping - enables VLDB migs
+
+
+$params = @{
+    Source                          = 'localhost'
+    Destination                     = 'localhost\sql2017'
+    Database                        = 'bigoldb'
+    BackupNetworkPath               = '\\localhost\backups'
+    BackupScheduleFrequencyType     = 'Daily'
+    BackupScheduleFrequencyInterval = 1
+    CompressBackup                  = $true
+    CopyScheduleFrequencyType       = 'Daily'
+    CopyScheduleFrequencyInterval   = 1
+    GenerateFullBackup              = $true
+    Force                           = $true
+}
+
+# pass the splat
+Invoke-DbaDbLogShipping @params
+Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database bigoldb
+
 Install-DbaInstance / Update-DbaInstance -> II Video
 #endregion
 
@@ -57,25 +77,6 @@ Start-Process https://dbatools.io/wp-content/uploads/2018/08/Get-DbaAgentJobHist
 
 ConvertTo-DbaXESession
 Test-DbaDbCompression
-
-$params = @{
-    Source                          = 'sql2008'
-    Destination                     = 'sql2016', 'sql2017'
-    Database                        = 'shipped'
-    BackupNetworkPath               = '\\backups\sql'
-    PrimaryMonitorServer            = 'sql2012'
-    SecondaryMonitorServer          = 'sql2012'
-    BackupScheduleFrequencyType     = 'Daily'
-    BackupScheduleFrequencyInterval = 1
-    CompressBackup                  = $true
-    CopyScheduleFrequencyType       = 'Daily'
-    CopyScheduleFrequencyInterval   = 1
-    GenerateFullBackup              = $true
-    Force                           = $true
-}
-
-# pass the splat
-Invoke-DbaLogShipping @params
 
 # BONUS: Invoke-DbatoolsRenameHelper
 <#
