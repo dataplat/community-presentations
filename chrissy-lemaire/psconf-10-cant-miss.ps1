@@ -1,5 +1,6 @@
 ﻿#region Basics
 
+# keep SSMS open
 # Add psdbatools, install azure data studio 
 Get-DbaRegisteredServer | Format-Table
 
