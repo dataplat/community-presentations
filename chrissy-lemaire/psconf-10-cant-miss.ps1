@@ -1,27 +1,45 @@
-﻿# Basics - refresh
+﻿#region Basics
 
 # Add psdbatools, install azure data studio 
 Get-DbaRegisteredServer | Format-Table
 
+
+
 # Connect-DbaInstance
 Get-DbaRegisteredServer -Name psdbatools.database.windows.net | Connect-DbaInstance
+
+
 
 # CSV galore! Delete Maximo Park
 Get-ChildItem C:\csv
 Get-ChildItem C:\csv | Import-DbaCsv -SqlInstance localhost\sql2017 -Database tempdb -AutoCreateTable -Encoding  ([System.Text.Encoding]::UTF8)
 
+
+
 # Query
 # displays messages (aka print or raiserror) nicely, without interfering with the resultset, and asynchronously
+# parametrized statements without incurring in sql-injection problems
 Invoke-DbaQuery -SqlInstance localhost\sql2017 -Database tempdb -Query "Select top 10 * from [jmfh-year]"
 
+
+
+
+# Write-DbaDbTableData
+Get-ChildItem -File | Write-DbaDbTableData -SqlInstance localhost\sql2017 -Database tempdb -Table files -AutoCreateTable
+Get-ChildItem -File | Select *
+Invoke-DbaQuery -SqlInstance localhost\sql2017 -Database tempdb -Query "Select * from files"
+
+#endregion
+
 #region Must Haves
+
+# Gotta find it
 Find-DbaInstance -ComputerName localhost
 
 
 Invoke-DbaDbMasking / Invoke-DbaDbDataGenerator
-Invoke-DbaLogShipping - enables VLDB migs
 
-
+# Very Large Database Migration
 $params = @{
     Source                          = 'localhost'
     Destination                     = 'localhost\sql2017'
@@ -38,9 +56,15 @@ $params = @{
 
 # pass the splat
 Invoke-DbaDbLogShipping @params
+
+# Recover when ready
 Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database bigoldb
 
-Install-DbaInstance / Update-DbaInstance -> II Video
+
+
+# Install-DbaInstance / Update-DbaInstance
+Invoke-Item 'C:\temp\Patch several SQL Servers at once using Update-DbaInstance by Kirill Kravtsov.mp4'
+
 #endregion
 
 #region Combo kills
@@ -56,7 +80,25 @@ Get-ChildItem -Path C:\temp\dr -Recurse -Filter *database* | Invoke-Item
 Test-DbaLastBackup -SqlInstance localhost -Destination localhost\sql2016 | Select * | Out-GridView
 
 # All in one, no hassle
-New-DbaAvailabilityGroup
+# the password is dbatools.IO
+$cred = Get-Credential -UserName sqladmin
+ 
+# setup a powershell splat
+$params = @{
+    Primary = "localhost"
+    PrimarySqlCredential = $cred
+    Secondary = "localhost:14333"
+    SecondarySqlCredential = $cred
+    Name = "test-ag"
+    Database = "pubs"
+    ClusterType = "None"
+    SeedingMode = "Automatic"
+    FailoverMode = "Manual"
+    Confirm = $false
+ }
+ 
+# execute the command
+ New-DbaAvailabilityGroup @params
 
 #endregion
 
@@ -73,12 +115,15 @@ Invoke-Item -Path C:\temp\DbaAgentJobHistory.html
 # Prettier
 Start-Process https://dbatools.io/wp-content/uploads/2018/08/Get-DbaAgentJobHistory-html.jpg
 
+# ConvertTo-DbaXESession
+Get-DbaTrace -SqlInstance localhost\sql2017 -Id 1 | ConvertTo-DbaXESession -Name 'Default Trace' | Start-DbaXESession
+
+Install-DbaMaintenanceSolution -SqlInstance localhost\sql2017 -ReplaceExisting -InstallJobs
 #endregion
 
-ConvertTo-DbaXESession
-Test-DbaDbCompression
-
-# BONUS: Invoke-DbatoolsRenameHelper
+#region BONUS: Invoke-DbatoolsRenameHelper
+    Invoke-DbatoolsRenameHelper
+#endregion
 <#
     2 for sure, 1 I think it's a feature, most will think it's a limitation.
     1) it's the only way to issue parametrized statements without incurring in sql-injection problems
