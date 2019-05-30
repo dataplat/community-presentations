@@ -1,19 +1,18 @@
 ﻿#region Basics
 
-# keep SSMS open
-# Add psdbatools, install azure data studio 
-Get-DbaRegisteredServer | Format-Table
+# Get-DbaRegisteredServer
+Get-DbaRegisteredServer
 
 
 
 # Connect-DbaInstance
-Get-DbaRegisteredServer -Name psdbatools.database.windows.net | Connect-DbaInstance
+Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance
 
 
 
-# CSV galore! Delete Maximo Park
-Get-ChildItem C:\csv
-Get-ChildItem C:\csv | Import-DbaCsv -SqlInstance localhost\sql2017 -Database tempdb -AutoCreateTable -Encoding  ([System.Text.Encoding]::UTF8)
+# CSV galore!
+Get-ChildItem C:\temp\psconf\csv
+Get-ChildItem C:\temp\psconf\csv | Import-DbaCsv -SqlInstance localhost\sql2017 -Database tempdb -AutoCreateTable -Encoding UTF8
 
 
 
@@ -64,7 +63,7 @@ Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database bigoldb
 
 
 # Install-DbaInstance / Update-DbaInstance
-Invoke-Item 'C:\temp\Patch several SQL Servers at once using Update-DbaInstance by Kirill Kravtsov.mp4'
+Invoke-Item 'C:\temp\psconf\Patch several SQL Servers at once using Update-DbaInstance by Kirill Kravtsov.mp4'
 
 #endregion
 
