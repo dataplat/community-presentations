@@ -5,6 +5,11 @@
 Get-DbaRegisteredServer
 
 
+Restore-DbaDatabase -SqlInstance localhost\sql2017 -Path "\\localhost\backups\AdventureWorks2014.bak"
+Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017 -FilePath https://sqlps.io/maskconfig
+$file = New-DbaDbMaskingConfig -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -path C:\temp\mask.json
+$file | Invoke-Item
+Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -FilePath 'C:\temp\mask.json\localhost$sql2017.AdventureWorks2014.tables.json'
 
 # Connect-DbaInstance
 Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance | Get-DbaDatabase
@@ -80,6 +85,7 @@ Get-ChildItem -Path C:\temp\dr -Recurse -Filter *database* | Invoke-Item
 # Wraps a bunch
 Test-DbaLastBackup -SqlInstance localhost -Destination localhost\sql2016 | Select * | Out-GridView
 
+# 
 # All in one, no hassle
 $docker1 = Get-DbaRegisteredServer -Name dockersql1
 $docker2 = Get-DbaRegisteredServer -Name dockersql2
