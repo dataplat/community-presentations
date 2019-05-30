@@ -9,7 +9,7 @@ Restore-DbaDatabase -SqlInstance localhost\sql2017 -Path "\\localhost\backups\Ad
 Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017 -FilePath https://sqlps.io/maskconfig
 $file = New-DbaDbMaskingConfig -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -path C:\temp\mask.json
 $file | Invoke-Item
-Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -FilePath 'C:\temp\mask.json\localhost$sql2017.AdventureWorks2014.tables.json'
+Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -FilePath "C:\github\community-presentations\chrissy-lemaire\mask.json"
 
 # Connect-DbaInstance
 Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance | Get-DbaDatabase
