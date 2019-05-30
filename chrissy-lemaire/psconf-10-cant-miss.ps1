@@ -1,4 +1,5 @@
-﻿#region Basics
+﻿break 
+#region Basics
 
 # Get-DbaRegisteredServer
 Get-DbaRegisteredServer
@@ -6,7 +7,7 @@ Get-DbaRegisteredServer
 
 
 # Connect-DbaInstance
-Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance
+Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance | Get-DbaDatabase
 
 
 
@@ -34,7 +35,7 @@ Invoke-DbaQuery -SqlInstance localhost\sql2017 -Database tempdb -Query "Select *
 #region Must Haves
 
 # Gotta find it
-Find-DbaInstance -ComputerName localhost
+Find-DbaInstance -ComputerName localhost | Select * | Out-GridView
 
 
 Invoke-DbaDbMasking / Invoke-DbaDbDataGenerator
@@ -119,10 +120,10 @@ Get-DbaTrace -SqlInstance localhost\sql2017 -Id 1 | ConvertTo-DbaXESession -Name
 Install-DbaMaintenanceSolution -SqlInstance localhost\sql2017 -ReplaceExisting -InstallJobs
 #endregion
 
-#region BONUS: Invoke-DbatoolsRenameHelper
+#region BONUS
     Invoke-DbatoolsRenameHelper
-#endregion
-<#
+
+    <#
     2 for sure, 1 I think it's a feature, most will think it's a limitation.
     1) it's the only way to issue parametrized statements without incurring in sql-injection problems
     2) it's a different beast from invoke-sqlcmd, which cannot do 1) BUT can handle the "sqlcmd" scripts, albeit with lots of limits. tl;dr: sqlcmd works with 100%, invoke-sqlcmd works for 80%. Invoke-DbaQuery is NOT invoke-sqlcmd, nor tends to be
@@ -131,3 +132,4 @@ Install-DbaMaintenanceSolution -SqlInstance localhost\sql2017 -ReplaceExisting -
     you point it to a user database and you're certain it won't cross boundaries
     (surely, the only way to be certain would be to use a lowprivileged user, but, still, has a lot better isolation than sqlcmd or invoke-sqlcmd )
 #>
+#endregion
