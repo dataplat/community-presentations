@@ -80,15 +80,13 @@ Get-ChildItem -Path C:\temp\dr -Recurse -Filter *database* | Invoke-Item
 Test-DbaLastBackup -SqlInstance localhost -Destination localhost\sql2016 | Select * | Out-GridView
 
 # All in one, no hassle
-# the password is dbatools.IO
-$cred = Get-Credential -UserName sqladmin
- 
+$docker1 = Get-DbaRegisteredServer -Name dockersql1
+$docker2 = Get-DbaRegisteredServer -Name dockersql2
+
 # setup a powershell splat
 $params = @{
-    Primary = "localhost"
-    PrimarySqlCredential = $cred
-    Secondary = "localhost:14333"
-    SecondarySqlCredential = $cred
+    Primary = $docker1
+    Secondary = $docker2
     Name = "test-ag"
     Database = "pubs"
     ClusterType = "None"
