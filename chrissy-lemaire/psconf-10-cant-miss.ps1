@@ -1,4 +1,4 @@
-﻿break 
+﻿break
 #region Basics
 
 # Get-DbaRegisteredServer
@@ -25,15 +25,17 @@ Invoke-DbaQuery -SqlInstance localhost\sql2017 -Database tempdb -Query "Select *
 
 #endregion
 
+
+
+
 #region Must Haves
 
 # Gotta find it
 Find-DbaInstance -ComputerName localhost | Select * | Out-GridView
 
 
-Restore-DbaDatabase -SqlInstance localhost\sql2017 -Path "\\localhost\backups\AdventureWorks2014.bak"
 
-# prettify json
+# PII Management
 Invoke-DbaDbPiiScan -SqlInstance localhost\sql2017 -Database AdventureWorks2014 | Out-GridView
 
 New-DbaDbMaskingConfig -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -Table EmployeeDepartmentHistory, Employee -Path C:\temp | Invoke-Item
@@ -57,11 +59,13 @@ $params = @{
     Force                           = $true
 }
 
-# pass the splat
+
 Invoke-DbaDbLogShipping @params
 
 # Recover when ready
 Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database bigoldb
+
+
 
 
 
@@ -72,9 +76,13 @@ Invoke-Item 'C:\temp\psconf\Patch several SQL Servers at once using Update-DbaIn
 
 #region fan favorites
 
-# Diagnostic, add connection, preopen
-New-DbaDiagnosticAdsNotebook -TargetVersion 2017 -Path c:\temp\myNotebook.ipynb | Invoke-Item
+# Diagnostic
 Invoke-DbaDiagnosticQuery -SqlInstance localhost\sql2017 | Export-DbaDiagnosticQuery
+New-DbaDiagnosticAdsNotebook -TargetVersion 2017 -Path C:\temp\myNotebook.ipynb | Invoke-Item
+
+
+
+
 
 # Dope - https://dbatools.io/timeline/
 Get-DbaAgentJobHistory -SqlInstance localhost\sql2017 -StartDate '2016-08-18 00:00' -EndDate '2018-08-19 23:59' -ExcludeJobSteps | ConvertTo-DbaTimeline | Out-File C:\temp\DbaAgentJobHistory.html -Encoding ASCII
@@ -83,25 +91,35 @@ Invoke-Item -Path C:\temp\DbaAgentJobHistory.html
 # Prettier
 Start-Process https://dbatools.io/wp-content/uploads/2018/08/Get-DbaAgentJobHistory-html.jpg
 
+
+
 # ConvertTo-DbaXESession
 Get-DbaTrace -SqlInstance localhost\sql2017 -Id 1 | ConvertTo-DbaXESession -Name 'Default Trace' | Start-DbaXESession
 
+
+
+# Ola Hallengren supported
 Install-DbaMaintenanceSolution -SqlInstance localhost\sql2017 -ReplaceExisting -InstallJobs
 #endregion
 
 #region Combo kills
 
 # Start-DbaMigration wraps 30+ commands
-Start-DbaMigration -Source localhost -Destination sql2016 -UseLastBackup -Exclude BackupDevices | Out-GridView
+Start-DbaMigration -Source localhost -Destination localhost\sql2016 -UseLastBackup -Exclude BackupDevices | Out-GridView
 
-# Wraps
+
+
+# Wraps like 20
 Export-DbaInstance -SqlInstance localhost\sql2017 -Path C:\temp\dr
 Get-ChildItem -Path C:\temp\dr -Recurse -Filter *database* | Invoke-Item
+
+
 
 # Wraps a bunch
 Test-DbaLastBackup -SqlInstance localhost -Destination localhost\sql2016 | Select * | Out-GridView
 
-# 
+
+
 # All in one, no hassle - includes credentials!
 $docker1 = Get-DbaRegisteredServer -Name dockersql1
 $docker2 = Get-DbaRegisteredServer -Name dockersql2
@@ -124,5 +142,5 @@ $params = @{
 #endregion
 
 #region BONUS
-    Invoke-DbatoolsRenameHelper
+Get-ChildItem C:\github\community-presentations\*ps1 -Recurse | Invoke-DbatoolsRenameHelper | Out-GridView
 #endregion
