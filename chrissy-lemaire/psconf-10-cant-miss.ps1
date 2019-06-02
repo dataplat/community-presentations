@@ -76,7 +76,12 @@ Invoke-Item 'C:\temp\psconf\Patch several SQL Servers at once using Update-DbaIn
 #region fan favorites
 
 # Diagnostic
-Invoke-DbaDiagnosticQuery -SqlInstance localhost\sql2017 | Export-DbaDiagnosticQuery
+Invoke-DbaDiagnosticQuery -SqlInstance localhost\sql2017 | Export-DbaDiagnosticQuery -Outvariable exports
+$exports | Select -First 1 -Skip 3 | Invoke-Item
+
+
+
+# Spaghetti!
 New-DbaDiagnosticAdsNotebook -TargetVersion 2017 -Path C:\temp\myNotebook.ipynb | Invoke-Item
 
 
@@ -98,26 +103,10 @@ Get-DbaTrace -SqlInstance localhost\sql2017 -Id 1 | ConvertTo-DbaXESession -Name
 
 
 # Ola Hallengren supported
-Install-DbaMaintenanceSolution -SqlInstance localhost\sql2017 -ReplaceExisting -InstallJobs
+Install-DbaMaintenanceSolution -SqlInstance localhost, localhost\sql2016, localhost\sql2017 -ReplaceExisting -InstallJobs
 #endregion
 
 #region Combo kills
-
-# Start-DbaMigration wraps 30+ commands
-Start-DbaMigration -Source localhost -Destination localhost\sql2016 -UseLastBackup -Exclude BackupDevices | Out-GridView
-
-
-
-# Wraps like 20
-Export-DbaInstance -SqlInstance localhost\sql2017 -Path C:\temp\dr
-Get-ChildItem -Path C:\temp\dr -Recurse -Filter *database* | Invoke-Item
-
-
-
-# Wraps a bunch
-Test-DbaLastBackup -SqlInstance localhost -Destination localhost\sql2016 | Select * | Out-GridView
-
-
 
 # All in one, no hassle - includes credentials!
 $docker1 = Get-DbaRegisteredServer -Name dockersql1
@@ -137,6 +126,17 @@ $params = @{
  
 # execute the command
  New-DbaAvailabilityGroup @params
+
+ # Wraps a bunch
+Test-DbaLastBackup -SqlInstance localhost -Destination localhost\sql2016 | Select * | Out-GridView
+
+# Start-DbaMigration wraps 30+ commands
+Start-DbaMigration -Source localhost -Destination localhost\sql2016 -UseLastBackup -Exclude BackupDevices | Out-GridView
+
+
+# Wraps like 20
+Export-DbaInstance -SqlInstance localhost\sql2017 -Path C:\temp\dr
+Get-ChildItem -Path C:\temp\dr -Recurse -Filter *database* | Invoke-Item
 
 #endregion
 
