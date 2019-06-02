@@ -6,10 +6,15 @@ Get-DbaRegisteredServer
 
 
 Restore-DbaDatabase -SqlInstance localhost\sql2017 -Path "\\localhost\backups\AdventureWorks2014.bak"
-Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017 -FilePath https://sqlps.io/maskconfig
-$file = New-DbaDbMaskingConfig -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -path C:\temp\mask.json
-$file | Invoke-Item
-Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -FilePath "C:\github\community-presentations\chrissy-lemaire\mask.json"
+
+# prettify json
+Invoke-DbaDbPiiScan -SqlInstance localhost\sql2017 -Database AdventureWorks2014 | Out-GridView
+
+New-DbaDbMaskingConfig -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -Table EmployeeDepartmentHistory, Employee -Path C:\temp | Invoke-Item
+Invoke-Item -Path 'C:\github\community-presentations\chrissy-lemaire\mask.json'
+
+Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017  -ExcludeTable EmployeeDepartmentHistory -FilePath 'C:\github\community-presentations\chrissy-lemaire\mask.json'
+
 
 # Connect-DbaInstance
 Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance | Get-DbaDatabase
@@ -19,14 +24,7 @@ Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance | Get-DbaDatabase
 # CSV galore!
 Get-ChildItem C:\temp\psconf\csv
 Get-ChildItem C:\temp\psconf\csv | Import-DbaCsv -SqlInstance localhost\sql2017 -Database tempdb -AutoCreateTable -Encoding UTF8
-
-
-
-# Query
-# displays messages (aka print or raiserror) nicely, without interfering with the resultset, and asynchronously
-# parametrized statements without incurring in sql-injection problems
 Invoke-DbaQuery -SqlInstance localhost\sql2017 -Database tempdb -Query "Select top 10 * from [jmfh-year]"
-
 
 
 
@@ -86,7 +84,7 @@ Get-ChildItem -Path C:\temp\dr -Recurse -Filter *database* | Invoke-Item
 Test-DbaLastBackup -SqlInstance localhost -Destination localhost\sql2016 | Select * | Out-GridView
 
 # 
-# All in one, no hassle
+# All in one, no hassle - includes credentials!
 $docker1 = Get-DbaRegisteredServer -Name dockersql1
 $docker2 = Get-DbaRegisteredServer -Name dockersql2
 
