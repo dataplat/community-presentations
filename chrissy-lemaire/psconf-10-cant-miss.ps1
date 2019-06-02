@@ -43,7 +43,6 @@ Invoke-DbaDbPiiScan -SqlInstance localhost\sql2017 -Database AdventureWorks2014 
 
 # Mask that
 New-DbaDbMaskingConfig -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -Table EmployeeDepartmentHistory, Employee -Path C:\temp | Invoke-Item
-Invoke-Item -Path 'C:\github\community-presentations\chrissy-lemaire\mask.json'
 
 Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017 -FilePath 'C:\github\community-presentations\chrissy-lemaire\mask.json' -ExcludeTable EmployeeDepartmentHistory
 
@@ -74,7 +73,11 @@ Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database shipped
 # Update-DbaInstance -ComputerName sql2017 -Path \\dc\share\patch -Credential base\ctrlb
 Invoke-Item 'C:\temp\psconf\Patch several SQL Servers at once using Update-DbaInstance by Kirill Kravtsov.mp4'
 
+
+
 #endregion
+
+
 
 
 
@@ -101,14 +104,12 @@ Start-Process https://dbatools.io/wp-content/uploads/2018/08/Get-DbaAgentJobHist
 
 
 
-# ConvertTo-DbaXESession
-Get-DbaTrace -SqlInstance localhost\sql2017 -Id 1 | ConvertTo-DbaXESession -Name 'Default Trace' | Start-DbaXESession
-
-
 
 # Ola Hallengren supported
 Install-DbaMaintenanceSolution -SqlInstance localhost, localhost\sql2016, localhost\sql2017 -ReplaceExisting -InstallJobs
 #endregion
+
+
 
 #region Combo kills
 
@@ -134,6 +135,7 @@ $params = @{
  # Wraps a bunch
 Test-DbaLastBackup -SqlInstance localhost -Destination localhost\sql2016 | Select * | Out-GridView
 
+
 # Start-DbaMigration wraps 30+ commands
 Start-DbaMigration -Source localhost -Destination localhost\sql2016 -UseLastBackup -Exclude BackupDevices | Out-GridView
 
@@ -151,3 +153,17 @@ Get-ChildItem -Path C:\temp\dr -Recurse -Filter *database* | Invoke-Item
 #region BONUS
 Get-ChildItem C:\github\community-presentations\*ps1 -Recurse | Invoke-DbatoolsRenameHelper | Out-GridView
 #endregion
+
+
+
+
+
+
+
+
+# if there's time
+
+
+# ConvertTo-DbaXESession
+Get-DbaTrace -SqlInstance localhost\sql2017 -Id 1 | ConvertTo-DbaXESession -Name 'Default Trace' | Start-DbaXESession
+
