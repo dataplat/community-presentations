@@ -1,8 +1,9 @@
 ﻿break
 #region Basics
 
-# Get-DbaRegisteredServer
+# Get-DbaRegisteredServer, aliased
 Get-DbaRegisteredServer
+Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -IncludeLocal
 
 
 
@@ -31,7 +32,7 @@ Invoke-DbaQuery -SqlInstance localhost\sql2017 -Database tempdb -Query "Select *
 #region Must Haves
 
 # Gotta find it
-Find-DbaInstance -ComputerName localhost | Select * | Out-GridView
+Find-DbaInstance -ComputerName localhost
 
 
 
