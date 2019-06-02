@@ -137,7 +137,7 @@ Test-DbaLastBackup -SqlInstance localhost -Destination localhost\sql2016 | Selec
 
 
 # Start-DbaMigration wraps 30+ commands
-Start-DbaMigration -Source localhost -Destination localhost\sql2016 -UseLastBackup -Exclude BackupDevices | Out-GridView
+Start-DbaMigration -Source localhost -Destination localhost\sql2016 -UseLastBackup -Exclude BackupDevices, SysDbUserObjects -WarningAction SilentlyContinue | Out-GridView
 
 
 # Wraps like 20
