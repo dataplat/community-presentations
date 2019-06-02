@@ -31,7 +31,7 @@ Invoke-DbaQuery -SqlInstance localhost\sql2017 -Database tempdb -Query "Select *
 
 #region Must Haves
 
-# Gotta find it
+# Gotta find it, run this once
 Find-DbaInstance -ComputerName localhost
 
 
@@ -39,17 +39,18 @@ Find-DbaInstance -ComputerName localhost
 # PII Management
 Invoke-DbaDbPiiScan -SqlInstance localhost\sql2017 -Database AdventureWorks2014 | Out-GridView
 
+# Redirect dbatools.io/mask to docs.dbatools.io/bogus
 New-DbaDbMaskingConfig -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -Table EmployeeDepartmentHistory, Employee -Path C:\temp | Invoke-Item
 Invoke-Item -Path 'C:\github\community-presentations\chrissy-lemaire\mask.json'
 
-Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017  -ExcludeTable EmployeeDepartmentHistory -FilePath 'C:\github\community-presentations\chrissy-lemaire\mask.json'
+Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017 -FilePath 'C:\github\community-presentations\chrissy-lemaire\mask.json' -ExcludeTable EmployeeDepartmentHistory
 
 
 # Very Large Database Migration
 $params = @{
     Source                          = 'localhost'
     Destination                     = 'localhost\sql2017'
-    Database                        = 'bigoldb'
+    Database                        = 'shipped'
     BackupNetworkPath               = '\\localhost\backups'
     BackupScheduleFrequencyType     = 'Daily'
     BackupScheduleFrequencyInterval = 1
@@ -64,10 +65,7 @@ $params = @{
 Invoke-DbaDbLogShipping @params
 
 # Recover when ready
-Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database bigoldb
-
-
-
+Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database shipped
 
 
 # Install-DbaInstance / Update-DbaInstance
