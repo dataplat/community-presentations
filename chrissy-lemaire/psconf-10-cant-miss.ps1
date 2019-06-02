@@ -5,16 +5,6 @@
 Get-DbaRegisteredServer
 
 
-Restore-DbaDatabase -SqlInstance localhost\sql2017 -Path "\\localhost\backups\AdventureWorks2014.bak"
-
-# prettify json
-Invoke-DbaDbPiiScan -SqlInstance localhost\sql2017 -Database AdventureWorks2014 | Out-GridView
-
-New-DbaDbMaskingConfig -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -Table EmployeeDepartmentHistory, Employee -Path C:\temp | Invoke-Item
-Invoke-Item -Path 'C:\github\community-presentations\chrissy-lemaire\mask.json'
-
-Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017  -ExcludeTable EmployeeDepartmentHistory -FilePath 'C:\github\community-presentations\chrissy-lemaire\mask.json'
-
 
 # Connect-DbaInstance
 Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance | Get-DbaDatabase
@@ -41,7 +31,16 @@ Invoke-DbaQuery -SqlInstance localhost\sql2017 -Database tempdb -Query "Select *
 Find-DbaInstance -ComputerName localhost | Select * | Out-GridView
 
 
-Invoke-DbaDbMasking / Invoke-DbaDbDataGenerator
+Restore-DbaDatabase -SqlInstance localhost\sql2017 -Path "\\localhost\backups\AdventureWorks2014.bak"
+
+# prettify json
+Invoke-DbaDbPiiScan -SqlInstance localhost\sql2017 -Database AdventureWorks2014 | Out-GridView
+
+New-DbaDbMaskingConfig -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -Table EmployeeDepartmentHistory, Employee -Path C:\temp | Invoke-Item
+Invoke-Item -Path 'C:\github\community-presentations\chrissy-lemaire\mask.json'
+
+Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017  -ExcludeTable EmployeeDepartmentHistory -FilePath 'C:\github\community-presentations\chrissy-lemaire\mask.json'
+
 
 # Very Large Database Migration
 $params = @{
@@ -69,6 +68,25 @@ Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database bigoldb
 # Install-DbaInstance / Update-DbaInstance
 Invoke-Item 'C:\temp\psconf\Patch several SQL Servers at once using Update-DbaInstance by Kirill Kravtsov.mp4'
 
+#endregion
+
+#region fan favorites
+
+# Diagnostic, add connection, preopen
+New-DbaDiagnosticAdsNotebook -TargetVersion 2017 -Path c:\temp\myNotebook.ipynb | Invoke-Item
+Invoke-DbaDiagnosticQuery -SqlInstance localhost\sql2017 | Export-DbaDiagnosticQuery
+
+# Dope - https://dbatools.io/timeline/
+Get-DbaAgentJobHistory -SqlInstance localhost\sql2017 -StartDate '2016-08-18 00:00' -EndDate '2018-08-19 23:59' -ExcludeJobSteps | ConvertTo-DbaTimeline | Out-File C:\temp\DbaAgentJobHistory.html -Encoding ASCII
+Invoke-Item -Path C:\temp\DbaAgentJobHistory.html
+
+# Prettier
+Start-Process https://dbatools.io/wp-content/uploads/2018/08/Get-DbaAgentJobHistory-html.jpg
+
+# ConvertTo-DbaXESession
+Get-DbaTrace -SqlInstance localhost\sql2017 -Id 1 | ConvertTo-DbaXESession -Name 'Default Trace' | Start-DbaXESession
+
+Install-DbaMaintenanceSolution -SqlInstance localhost\sql2017 -ReplaceExisting -InstallJobs
 #endregion
 
 #region Combo kills
@@ -105,35 +123,6 @@ $params = @{
 
 #endregion
 
-#region fan favorites
-
-# Diagnostic, add connection, preopen
-New-DbaDiagnosticAdsNotebook -TargetVersion 2017 -Path c:\temp\myNotebook.ipynb | Invoke-Item
-Invoke-DbaDiagnosticQuery -SqlInstance localhost\sql2017 | Export-DbaDiagnosticQuery
-
-# Dope - https://dbatools.io/timeline/
-Get-DbaAgentJobHistory -SqlInstance localhost\sql2017 -StartDate '2016-08-18 00:00' -EndDate '2018-08-19 23:59' -ExcludeJobSteps | ConvertTo-DbaTimeline | Out-File C:\temp\DbaAgentJobHistory.html -Encoding ASCII
-Invoke-Item -Path C:\temp\DbaAgentJobHistory.html
-
-# Prettier
-Start-Process https://dbatools.io/wp-content/uploads/2018/08/Get-DbaAgentJobHistory-html.jpg
-
-# ConvertTo-DbaXESession
-Get-DbaTrace -SqlInstance localhost\sql2017 -Id 1 | ConvertTo-DbaXESession -Name 'Default Trace' | Start-DbaXESession
-
-Install-DbaMaintenanceSolution -SqlInstance localhost\sql2017 -ReplaceExisting -InstallJobs
-#endregion
-
 #region BONUS
     Invoke-DbatoolsRenameHelper
-
-    <#
-    2 for sure, 1 I think it's a feature, most will think it's a limitation.
-    1) it's the only way to issue parametrized statements without incurring in sql-injection problems
-    2) it's a different beast from invoke-sqlcmd, which cannot do 1) BUT can handle the "sqlcmd" scripts, albeit with lots of limits. tl;dr: sqlcmd works with 100%, invoke-sqlcmd works for 80%. Invoke-DbaQuery is NOT invoke-sqlcmd, nor tends to be
-    3) displays messages (aka print or raiserror) nicely, without interfering with the resultset, and asynchronously (think, post 1.0, being able to use ola's maintenance seeing the progress in realtime) (edited)
-    4) database isolation (and that's the feature, at least for me). Being able to invoke a script without parsing it beforehand to inspect if, e.g., will drop msdb , to me is golden.
-    you point it to a user database and you're certain it won't cross boundaries
-    (surely, the only way to be certain would be to use a lowprivileged user, but, still, has a lot better isolation than sqlcmd or invoke-sqlcmd )
-#>
 #endregion
