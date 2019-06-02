@@ -36,10 +36,12 @@ Find-DbaInstance -ComputerName localhost
 
 
 
+
+
 # PII Management
 Invoke-DbaDbPiiScan -SqlInstance localhost\sql2017 -Database AdventureWorks2014 | Out-GridView
 
-# Redirect dbatools.io/mask to docs.dbatools.io/bogus
+# Mask that
 New-DbaDbMaskingConfig -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -Table EmployeeDepartmentHistory, Employee -Path C:\temp | Invoke-Item
 Invoke-Item -Path 'C:\github\community-presentations\chrissy-lemaire\mask.json'
 
@@ -69,9 +71,12 @@ Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database shipped
 
 
 # Install-DbaInstance / Update-DbaInstance
+# Update-DbaInstance -ComputerName sql2017 -Path \\dc\share\patch -Credential base\ctrlb
 Invoke-Item 'C:\temp\psconf\Patch several SQL Servers at once using Update-DbaInstance by Kirill Kravtsov.mp4'
 
 #endregion
+
+
 
 #region fan favorites
 
@@ -83,7 +88,6 @@ $exports | Select -First 1 -Skip 3 | Invoke-Item
 
 # Spaghetti!
 New-DbaDiagnosticAdsNotebook -TargetVersion 2017 -Path C:\temp\myNotebook.ipynb | Invoke-Item
-
 
 
 
@@ -139,6 +143,10 @@ Export-DbaInstance -SqlInstance localhost\sql2017 -Path C:\temp\dr
 Get-ChildItem -Path C:\temp\dr -Recurse -Filter *database* | Invoke-Item
 
 #endregion
+
+
+
+
 
 #region BONUS
 Get-ChildItem C:\github\community-presentations\*ps1 -Recurse | Invoke-DbatoolsRenameHelper | Out-GridView
