@@ -51,7 +51,7 @@
                     "MinValue": "1/1/1970",
                     "MaxValue": "1/1/1990",
                     "MaskingType": "Date",
-                    "SubType": "Past",
+                    "SubType": "Between",
                     "Format": null,
                     "Deterministic": false,
                     "Nullable": false,
