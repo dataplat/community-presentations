@@ -4,12 +4,11 @@
 # Get-DbaRegisteredServer, aliased
 Get-DbaRegisteredServer
 Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -IncludeLocal
+Get-DbaRegisteredServer -Group onprem | Get-DbaDatabase | Select SqlInstance, Name | Format-Table -AutoSize
 
 
-
-# Connect-DbaInstance
-Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance | Get-DbaDatabase
-
+# Connect-DbaInstance, supports everything!
+Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance 
 
 
 # CSV galore!
