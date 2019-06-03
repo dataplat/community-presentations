@@ -109,6 +109,10 @@ Start-Process https://dbatools.io/wp-content/uploads/2018/08/Get-DbaAgentJobHist
 
 #region Combo kills
 
+
+# Availability Groups
+Invoke-Item 'C:\temp\psconf\click-a-rama.mp4'
+
 # All in one, no hassle - includes credentials!
 $docker1 = Get-DbaRegisteredServer -Name dockersql1
 $docker2 = Get-DbaRegisteredServer -Name dockersql2
