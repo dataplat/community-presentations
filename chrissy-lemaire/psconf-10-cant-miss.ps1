@@ -10,7 +10,7 @@ Get-DbaRegisteredServer -Group onprem | Get-DbaDatabase | Select SqlInstance, Na
 
 
 # Connect-DbaInstance, supports everything!
-Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance 
+Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance
 
 
 
@@ -89,12 +89,6 @@ Invoke-Item 'C:\temp\psconf\Patch several SQL Servers at once using Update-DbaIn
 
 #region fan favorites
 
-# Diagnostic
-Invoke-DbaDiagnosticQuery -SqlInstance localhost\sql2017 | Export-DbaDiagnosticQuery -Outvariable exports
-$exports | Select -First 1 -Skip 3 | Invoke-Item
-
-
-
 # Spaghetti!
 New-DbaDiagnosticAdsNotebook -TargetVersion 2017 -Path C:\temp\myNotebook.ipynb | Invoke-Item
 
@@ -136,9 +130,6 @@ $params = @{
 
 
 
- # Wraps a bunch
-Test-DbaLastBackup -SqlInstance localhost -Destination localhost\sql2016 | Select * | Out-GridView
-
 
 # Start-DbaMigration wraps 30+ commands
 Start-DbaMigration -Source localhost -Destination localhost\sql2016 -UseLastBackup -Exclude BackupDevices, SysDbUserObjects -WarningAction SilentlyContinue | Out-GridView
@@ -169,11 +160,19 @@ Get-ChildItem C:\github\community-presentations\*ps1 -Recurse | Invoke-DbatoolsR
 
 # if there's time
 
+# Fan favorites
+# Diagnostic
+Invoke-DbaDiagnosticQuery -SqlInstance localhost\sql2017 | Export-DbaDiagnosticQuery -Outvariable exports
+$exports | Select -Skip 3 -First 1 | Invoke-Item
+
+
+# Ola Hallengren supported
+Install-DbaMaintenanceSolution -SqlInstance localhost, localhost\sql2016, localhost\sql2017 -ReplaceExisting -InstallJobs
 
 # ConvertTo-DbaXESession
 Get-DbaTrace -SqlInstance localhost\sql2017 -Id 1 | ConvertTo-DbaXESession -Name 'Default Trace' | Start-DbaXESession
 
 
+ # Wraps a bunch
+Test-DbaLastBackup -SqlInstance localhost -Destination localhost\sql2016 | Select * | Out-GridView
 
-# Ola Hallengren supported
-Install-DbaMaintenanceSolution -SqlInstance localhost, localhost\sql2016, localhost\sql2017 -ReplaceExisting -InstallJobs
