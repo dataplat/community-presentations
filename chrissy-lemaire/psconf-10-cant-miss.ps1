@@ -7,8 +7,12 @@ Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -IncludeLocal
 Get-DbaRegisteredServer -Group onprem | Get-DbaDatabase | Select SqlInstance, Name | Format-Table -AutoSize
 
 
+
+
 # Connect-DbaInstance, supports everything!
 Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance 
+
+
 
 
 # CSV galore!
@@ -42,8 +46,9 @@ Invoke-DbaDbPiiScan -SqlInstance localhost\sql2017 -Database AdventureWorks2014 
 
 # Mask that
 New-DbaDbMaskingConfig -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -Table EmployeeDepartmentHistory, Employee -Path C:\temp | Invoke-Item
-
 Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017 -FilePath 'C:\github\community-presentations\chrissy-lemaire\mask.json' -ExcludeTable EmployeeDepartmentHistory
+
+
 
 
 # Very Large Database Migration
@@ -68,8 +73,10 @@ Invoke-DbaDbLogShipping @params
 Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database shipped
 
 
+
+
 # Install-DbaInstance / Update-DbaInstance
-# Update-DbaInstance -ComputerName sql2017 -Path \\dc\share\patch -Credential base\ctrlb
+Update-DbaInstance -ComputerName sql2017 -Path \\dc\share\patch -Credential base\ctrlb
 Invoke-Item 'C:\temp\psconf\Patch several SQL Servers at once using Update-DbaInstance by Kirill Kravtsov.mp4'
 
 
@@ -94,7 +101,7 @@ New-DbaDiagnosticAdsNotebook -TargetVersion 2017 -Path C:\temp\myNotebook.ipynb 
 
 
 
-# Dope - https://dbatools.io/timeline/
+# Dope - dbatools.io/timeline
 Get-DbaAgentJobHistory -SqlInstance localhost\sql2017 -StartDate '2016-08-18 00:00' -EndDate '2018-08-19 23:59' -ExcludeJobSteps | ConvertTo-DbaTimeline | Out-File C:\temp\DbaAgentJobHistory.html -Encoding ASCII
 Invoke-Item -Path C:\temp\DbaAgentJobHistory.html
 
@@ -102,10 +109,6 @@ Invoke-Item -Path C:\temp\DbaAgentJobHistory.html
 Start-Process https://dbatools.io/wp-content/uploads/2018/08/Get-DbaAgentJobHistory-html.jpg
 
 
-
-
-# Ola Hallengren supported
-Install-DbaMaintenanceSolution -SqlInstance localhost, localhost\sql2016, localhost\sql2017 -ReplaceExisting -InstallJobs
 #endregion
 
 
@@ -116,7 +119,7 @@ Install-DbaMaintenanceSolution -SqlInstance localhost, localhost\sql2016, localh
 $docker1 = Get-DbaRegisteredServer -Name dockersql1
 $docker2 = Get-DbaRegisteredServer -Name dockersql2
 
-# setup a powershell splat
+# setup a powershell splat (has docker been reset?)
 $params = @{
     Primary = $docker1
     Secondary = $docker2
@@ -131,12 +134,16 @@ $params = @{
 # execute the command
  New-DbaAvailabilityGroup @params
 
+
+
  # Wraps a bunch
 Test-DbaLastBackup -SqlInstance localhost -Destination localhost\sql2016 | Select * | Out-GridView
 
 
 # Start-DbaMigration wraps 30+ commands
 Start-DbaMigration -Source localhost -Destination localhost\sql2016 -UseLastBackup -Exclude BackupDevices, SysDbUserObjects -WarningAction SilentlyContinue | Out-GridView
+
+
 
 
 # Wraps like 20
@@ -166,3 +173,7 @@ Get-ChildItem C:\github\community-presentations\*ps1 -Recurse | Invoke-DbatoolsR
 # ConvertTo-DbaXESession
 Get-DbaTrace -SqlInstance localhost\sql2017 -Id 1 | ConvertTo-DbaXESession -Name 'Default Trace' | Start-DbaXESession
 
+
+
+# Ola Hallengren supported
+Install-DbaMaintenanceSolution -SqlInstance localhost, localhost\sql2016, localhost\sql2017 -ReplaceExisting -InstallJobs
