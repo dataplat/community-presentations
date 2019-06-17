@@ -1,34 +1,35 @@
 ﻿break
 #region Basics
 
-# Get-DbaRegisteredServer, aliased
-Get-DbaRegisteredServer
-Get-DbaRegisteredServer -SqlInstance localhost\sql2016 -IncludeLocal
+# Registered Servers
+Get-DbaRegisteredServer # aliased
+Connect-DbaInstance -SqlInstance localhost -SqlCredential sqladmin | Add-DbaRegServer
 Get-DbaRegisteredServer -Group onprem | Get-DbaDatabase | Select SqlInstance, Name | Format-Table -AutoSize
 
 
 
-
-# Connect-DbaInstance, supports everything!
+# Connect-DbaInstance, supports everything! MFA
 Get-DbaRegisteredServer -Name azuresqldb | Connect-DbaInstance
 
 
 
 
-# CSV galore!
-Get-ChildItem C:\temp\psconf\csv
-Get-ChildItem C:\temp\psconf\csv | Import-DbaCsv -SqlInstance localhost\sql2017 -Database tempdb -AutoCreateTable -Encoding UTF8
-Invoke-DbaQuery -SqlInstance localhost\sql2017 -Database tempdb -Query "Select top 10 * from [jmfh-year]"
+# CSV galore! - Rob
+Get-ChildItem C:\temp\grillen\csv
+Get-ChildItem C:\temp\grillen\csv | Import-DbaCsv -SqlInstance sql2017 -Database tempdb -AutoCreateTable -Encoding UTF8
+Invoke-DbaQuery -SqlInstance sql2017 -Database tempdb -Query "Select top 10 * from [jmfh-year]"
 
 
 
-# Write-DbaDbTableData
-Get-ChildItem -File | Write-DbaDbTableData -SqlInstance localhost\sql2017 -Database tempdb -Table files -AutoCreateTable
+# Write-DbaDbTableData - Claudio
+Get-ChildItem -File | Write-DbaDbTableData -SqlInstance sql2017 -Database tempdb -Table files -AutoCreateTable
 Get-ChildItem -File | Select *
-Invoke-DbaQuery -SqlInstance localhost\sql2017 -Database tempdb -Query "Select * from files"
+Invoke-DbaQuery -SqlInstance sql2017 -Database tempdb -Query "Select * from files"
 
 
 # New-DbaLogin - Claudio
+New-DbaLogin -SqlInstance etc
+
 #endregion
 
 
@@ -36,15 +37,15 @@ Invoke-DbaQuery -SqlInstance localhost\sql2017 -Database tempdb -Query "Select *
 
 #region Must Haves
 
-# Gotta find it, run this once
+# Gotta find it, run this once - Chrissy & Rob
 Find-DbaInstance -ComputerName localhost
 
 
 
 
-
-# PII Management
+# PII Management - Chrissy & Rob
 Invoke-DbaDbPiiScan -SqlInstance localhost\sql2017 -Database AdventureWorks2014 | Out-GridView
+
 
 # Mask that
 New-DbaDbMaskingConfig -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -Table EmployeeDepartmentHistory, Employee -Path C:\temp | Invoke-Item
@@ -52,8 +53,95 @@ Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017 -FilePath 'C:\github\comm
 
 
 
+# VLDB / Combo kill  - Rob
+Invoke-Item 'C:\temp\grillen\click-a-rama.mp4'
 
-# Very Large Database Migration
+# All in one, no hassle - includes credentials!
+$docker1 = Get-DbaRegisteredServer -Name dockersql1
+$docker2 = Get-DbaRegisteredServer -Name dockersql2
+
+# setup a powershell splat (has docker been reset?)
+$params = @{
+    Primary      = $docker1
+    Secondary    = $docker2
+    Name         = "test-ag"
+    Database     = "pubs"
+    ClusterType  = "None"
+    SeedingMode  = "Automatic"
+    FailoverMode = "Manual"
+    Confirm      = $false
+}
+
+# execute the command
+New-DbaAvailabilityGroup @params
+
+
+# Install-DbaInstance / Update-DbaInstance - Claudio
+Update-DbaInstance -ComputerName sql2017 -Path \\dc\share\patch -Credential base\ctrlb
+Invoke-Item 'C:\temp\grillen\Patch several SQL Servers at once using Update-DbaInstance by Kirill Kravtsov.mp4'
+
+
+
+#endregion
+
+
+
+
+
+#region fan favorites
+
+# Spaghetti!
+New-DbaDiagnosticAdsNotebook -TargetVersion 2017 -Path C:\temp\myNotebook.ipynb | Invoke-Item
+
+
+# Compression! Jess
+$results = Test-DbaDbCompression -SqlInstance Server1 -Database AdventureWorks2017
+$results | Where-Object TableName -eq SalesOrderDetail |
+    Select-Object TableName, IndexName, IndexId, PercentScan, PercentUpdate, RowEstimatePercentOriginal, PageEstimatePercentOriginal, CompressionTypeRecommendation, SizeCurrent, SizeRequested, PercentCompression | Format-Table
+
+
+# Diagnostic! Andre
+Invoke-DbaDiagnosticQuery -SqlInstance localhost\sql2017 | Export-DbaDiagnosticQuery -OutVariable exports
+$exports | Select-Object -Skip 3 -First 1 | Invoke-Item
+
+
+#endregion
+
+
+
+#region Combo kills
+
+# Start-DbaMigration wraps 30+ commands - Rob
+$params = @{
+    Source      = "localhost"
+    Destination = "localhost\sql2016"
+    UseLastBackup = $true
+    Exclude = "BackupDevices", "SysDbUserObjects"
+ }
+
+Start-DbaMigration @params -WarningAction SilentlyContinue | Out-GridView
+
+
+
+# Wraps like 20 - Chrissy
+Export-DbaInstance -SqlInstance localhost\sql2017 -Path C:\temp\dr
+Get-ChildItem -Path C:\temp\dr -Recurse -Filter *database* | Invoke-Item
+
+#endregion
+
+
+#region BONUS
+Get-ChildItem C:\github\community-presentations\*ps1 -Recurse | Invoke-DbatoolsRenameHelper | Out-GridView
+#endregion
+
+
+# All together
+# Find-DbaCommand
+# dbatools.io/commands 
+# https://docs.dbatools.io/
+
+
+# More VLDB
 $params = @{
     Source                          = 'localhost'
     Destination                     = 'localhost\sql2017'
@@ -73,85 +161,3 @@ Invoke-DbaDbLogShipping @params
 
 # Recover when ready
 Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database shipped
-
-
-
-
-# Install-DbaInstance / Update-DbaInstance
-Update-DbaInstance -ComputerName sql2017 -Path \\dc\share\patch -Credential base\ctrlb
-Invoke-Item 'C:\temp\psconf\Patch several SQL Servers at once using Update-DbaInstance by Kirill Kravtsov.mp4'
-
-
-
-#endregion
-
-
-
-
-
-#region fan favorites
-
-# Spaghetti!
-New-DbaDiagnosticAdsNotebook -TargetVersion 2017 -Path C:\temp\myNotebook.ipynb | Invoke-Item
-
-# Compression!
-$results = Test-DbaDbCompression -SqlInstance Server1 -Database AdventureWorks2017
-$results | Where-Object TableName -eq SalesOrderDetail |
-    Select-Object TableName, IndexName, IndexId, PercentScan, PercentUpdate, RowEstimatePercentOriginal, PageEstimatePercentOriginal, CompressionTypeRecommendation, SizeCurrent, SizeRequested, PercentCompression | Format-Table
-
-# Diagnostic!
-Invoke-DbaDiagnosticQuery -SqlInstance localhost\sql2017 | Export-DbaDiagnosticQuery -OutVariable exports
-$exports | Select-Object -Skip 3 -First 1 | Invoke-Item
-
-
-#endregion
-
-
-
-#region Combo kills
-
-
-# Availability Groups
-Invoke-Item 'C:\temp\psconf\click-a-rama.mp4'
-
-# All in one, no hassle - includes credentials!
-$docker1 = Get-DbaRegisteredServer -Name dockersql1
-$docker2 = Get-DbaRegisteredServer -Name dockersql2
-
-# setup a powershell splat (has docker been reset?)
-$params = @{
-    Primary      = $docker1
-    Secondary    = $docker2
-    Name         = "test-ag"
-    Database     = "pubs"
-    ClusterType  = "None"
-    SeedingMode  = "Automatic"
-    FailoverMode = "Manual"
-    Confirm      = $false
-}
- 
-# execute the command
-New-DbaAvailabilityGroup @params
-
-
-
-
-# Start-DbaMigration wraps 30+ commands
-Start-DbaMigration -Source localhost -Destination localhost\sql2016 -UseLastBackup -Exclude BackupDevices, SysDbUserObjects -WarningAction SilentlyContinue | Out-GridView
-
-
-
-
-# Wraps like 20
-Export-DbaInstance -SqlInstance localhost\sql2017 -Path C:\temp\dr
-Get-ChildItem -Path C:\temp\dr -Recurse -Filter *database* | Invoke-Item
-
-#endregion
-
-
-
-
-
-#region BONUS
-Get-ChildItem C:\github\community-presentations\*ps1 -Recurse | Invoke-DbatoolsRenameHelper | Out-GridView
-#endregion
