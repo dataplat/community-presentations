@@ -27,6 +27,7 @@ Get-ChildItem -File | Select *
 Invoke-DbaQuery -SqlInstance sql2017 -Database tempdb -Query "Select * from files"
 
 
+
 # New-DbaLogin - Claudio
 $instance = "localhost\sql2017"
 $database = "AdventureWorks2014"
@@ -82,35 +83,32 @@ Invoke-DbaDbPiiScan -SqlInstance localhost\sql2017 -Database AdventureWorks2014 
 New-DbaDbMaskingConfig -SqlInstance localhost\sql2017 -Database AdventureWorks2014 -Table EmployeeDepartmentHistory, Employee -Path C:\temp | Invoke-Item
 Invoke-DbaDbDataMasking -SqlInstance localhost\sql2017 -FilePath 'C:\github\community-presentations\chrissy-lemaire\mask.json' -ExcludeTable EmployeeDepartmentHistory
 
-
-
-# VLDB / Combo kill  - Rob
-Invoke-Item 'C:\temp\grillen\click-a-rama.mp4'
-
-# All in one, no hassle - includes credentials!
-$docker1 = Get-DbaRegisteredServer -Name dockersql1
-$docker2 = Get-DbaRegisteredServer -Name dockersql2
-
-# setup a powershell splat (has docker been reset?)
+# More VLDB
 $params = @{
-    Primary      = $docker1
-    Secondary    = $docker2
-    Name         = "test-ag"
-    Database     = "pubs"
-    ClusterType  = "None"
-    SeedingMode  = "Automatic"
-    FailoverMode = "Manual"
-    Confirm      = $false
+    Source                          = 'localhost'
+    Destination                     = 'localhost\sql2017'
+    Database                        = 'shipped'
+    SharedPath                      = '\\localhost\backups'
+    BackupScheduleFrequencyType     = 'Daily'
+    BackupScheduleFrequencyInterval = 1
+    CompressBackup                  = $true
+    CopyScheduleFrequencyType       = 'Daily'
+    CopyScheduleFrequencyInterval   = 1
+    GenerateFullBackup              = $true
+    Force                           = $true
 }
 
-# execute the command
-New-DbaAvailabilityGroup @params
+
+Invoke-DbaDbLogShipping @params
+
+# Recover when ready
+Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database shipped
+
 
 
 # Install-DbaInstance / Update-DbaInstance - Claudio
 Update-DbaInstance -ComputerName sql2017 -Path \\dc\share\patch -Credential base\ctrlb
 Invoke-Item 'C:\temp\grillen\Patch several SQL Servers at once using Update-DbaInstance by Kirill Kravtsov.mp4'
-
 
 
 #endregion
@@ -143,6 +141,30 @@ $exports | Select-Object -Skip 3 -First 1 | Invoke-Item
 
 #region Combo kills
 
+
+# VLDB / Combo kill  - Rob
+Invoke-Item 'C:\temp\grillen\click-a-rama.mp4'
+
+# All in one, no hassle - includes credentials!
+$docker1 = Get-DbaRegisteredServer -Name dockersql1
+$docker2 = Get-DbaRegisteredServer -Name dockersql2
+
+# setup a powershell splat (has docker been reset?)
+$params = @{
+    Primary      = $docker1
+    Secondary    = $docker2
+    Name         = "test-ag"
+    Database     = "pubs"
+    ClusterType  = "None"
+    SeedingMode  = "Automatic"
+    FailoverMode = "Manual"
+    Confirm      = $false
+}
+
+# execute the command
+New-DbaAvailabilityGroup @params
+
+
 # Start-DbaMigration wraps 30+ commands - Rob
 $params = @{
     Source      = "localhost"
@@ -171,25 +193,3 @@ Get-ChildItem C:\github\community-presentations\*ps1 -Recurse | Invoke-DbatoolsR
 # Find-DbaCommand
 # dbatools.io/commands 
 # https://docs.dbatools.io/
-
-
-# More VLDB
-$params = @{
-    Source                          = 'localhost'
-    Destination                     = 'localhost\sql2017'
-    Database                        = 'shipped'
-    SharedPath                      = '\\localhost\backups'
-    BackupScheduleFrequencyType     = 'Daily'
-    BackupScheduleFrequencyInterval = 1
-    CompressBackup                  = $true
-    CopyScheduleFrequencyType       = 'Daily'
-    CopyScheduleFrequencyInterval   = 1
-    GenerateFullBackup              = $true
-    Force                           = $true
-}
-
-
-Invoke-DbaDbLogShipping @params
-
-# Recover when ready
-Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database shipped
