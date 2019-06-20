@@ -28,7 +28,38 @@ Invoke-DbaQuery -SqlInstance sql2017 -Database tempdb -Query "Select * from file
 
 
 # New-DbaLogin - Claudio
-New-DbaLogin -SqlInstance etc
+$instance = "localhost\sql2017"
+$database = "AdventureWorks2014"
+$login = "u_DataGrillen"
+$username = $login
+$newRole = "SPExecuter"
+$roles = "db_datareader", "db_datawriter", $newRole
+
+<# Reset
+# Remove new DB role
+Remove-DbaDbRole -SqlInstance $instance -Database $database -Role $newRole -Confirm:$false
+
+#Remove database user
+Remove-DbaDbUser -SqlInstance $instance -Database $database -User $username -Confirm:$false
+
+#Remove instance login
+Remove-DbaLogin -SqlInstance $instance -Login $login -Confirm:$false
+#>
+
+# Create new login
+New-DbaLogin -SqlInstance $instance -Login $login -DefaultDatabase $database -SecurePassword $password
+
+# Create new user
+New-DbaDbUser -SqlInstance $instance -Database $database -Username $username -Login $login
+
+# Create new DB role
+New-DbaDbRole -SqlInstance $instance -Database $database -Role $newRole
+
+# Add new Role
+Add-DbaDbRoleMember -SqlInstance $instance -Database $database -Role $roles -User $username -Confirm:$false
+
+# Get roles where user is member
+Get-DbaDbRoleMember -SqlInstance $instance -Database $database -Role $roles | Where-Object Username -eq $username
 
 #endregion
 
