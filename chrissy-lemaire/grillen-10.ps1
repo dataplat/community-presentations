@@ -95,10 +95,11 @@ New-DbaDiagnosticAdsNotebook -TargetVersion 2017 -Path C:\temp\myNotebook.ipynb 
 
 
 # Compression! Jess
-$results = Test-DbaDbCompression -SqlInstance Server1 -Database AdventureWorks2017
+$results = Test-DbaDbCompression -SqlInstance localhost\sql2017 -Database AdventureWorks
 $results | Where-Object TableName -eq SalesOrderDetail |
-    Select-Object TableName, IndexName, IndexId, PercentScan, PercentUpdate, RowEstimatePercentOriginal, PageEstimatePercentOriginal, CompressionTypeRecommendation, SizeCurrent, SizeRequested, PercentCompression | Format-Table
+Select-Object TableName, IndexName, CompressionTypeRecommendation, SizeCurrent, SizeRequested, PercentCompression | Format-Table
 
+Set-DbaDbCompression -SqlInstance localhost\sql2017 -InputObject $results
 
 # Diagnostic! Andre
 Invoke-DbaDiagnosticQuery -SqlInstance localhost\sql2017 | Export-DbaDiagnosticQuery -OutVariable exports
