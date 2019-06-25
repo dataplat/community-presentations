@@ -2,4 +2,4 @@ You’ve just inherited a large SQL Server estate, and next month’s merger wil
 
 The department just decided to reorganize and consolidate databases to prepare for an upgrade to the next release of SQL Server. How are you going to manage all this?
 
-It’s time to level up your administration toolkit. In this introduction to the amazing dbatools PowerShell module, we’ll briefly talk about the project itself, then take a tour of functions commonly used to manage SQL Server environments and data. When you leave, you’ll be ready to start reducing your daily workload through automation.
+It's time to automate with the dbatools Powershell module. We’ll briefly talk about the project itself, then take a tour of functions commonly used to manage SQL Server environments and data. When you leave, you’ll be ready to level up your administration toolkit and start reducing your daily workload.
