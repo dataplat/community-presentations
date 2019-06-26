@@ -1,7 +1,15 @@
+Install-module dbatools;
+update-module dbatools;
 $VerbosePreference = 'SilentlyContinue';
 import-module dbatools -Verbose:$false;
 $VerbosePreference = 'Continue';
-# $PSDefaultParameterValues['*:SqlInstance'] = 'ctx1315\sql16';
+
+# Set this to your dev instance for safety
+$PSDefaultParameterValues['*:SqlInstance'] = 'ctx1315\sql16';
+
+$WhatIfPreference = $true;
+
+# TODO: Answer questions in the abstract
 
 # Work this in
 # Reset-DbaAdmin
@@ -21,7 +29,10 @@ Test-DbaBuild -Latest -SqlInstance ctx1315\sql16, ctx1315\sql17 -Update;
 Set-DbaPrivilege -ComputerName ctx1315 -Type IFI, LPIM;
 
 # Connect to the server
+# TODO: Show connecting via SMO first
 $SQL16Instance = Connect-DbaInstance -SqlInstance ctx1315\sql16;
+
+# TODO: POke around in server object
 
 New-DbaLogin -SqlInstance $SQL16Instance -Login "SQLSat" -PasswordExpiration:$false -PasswordPolicy:$false
 
@@ -35,18 +46,20 @@ $SQL16Instance.Settings.LoginMode = [Microsoft.SqlServer.Management.SMO.ServerLo
 # Changes have to be committed back to the instance
 $SQL16Instance.Alter();
 
-Get-DbaLogin -SqlInstance $SQL16Instance -Login SQLSat
-
-Set-DbaLogin -SqlInstance $SQL16Instance -Login SQLSat -AddRole serveradmin, sysadmin
-
-# Do I need a restart here?
+# Do I need a restart here? Yes!
 $SQL16Instance = Connect-DbaInstance -SqlInstance ctx1315\sql16 -SqlCredential (Get-Credential -UserName "SQLSat" -Message "Welcome to SQL Saturday!");
+
+Get-DbaLogin -SqlInstance $SQL16Instance -Login SQLSat
+Set-DbaLogin -SqlInstance $SQL16Instance -Login SQLSat -AddRole serveradmin, sysadmin
 
 $PSDefaultParameterValues['*:SqlInstance'] = $SQL16Instance;
 
 # Check configured maximum server memory against Jonathan Kehiyas's recommended formula
 Test-DbaMaxMemory;
-
+# TODO: Missing the $MaxMemory step
+# TODO: Maybe show SMO?
+# TODO: Show Set-DbaSpConfigure
+# TODO: Show Invoke-DbaQuery w/ sp_configure
 Test-DbaMaxMemory | Set-DbaMaxMemory -Max $MaxMemory -WhatIf;
 
 # Because MAXDOP is now a database-scoped configuration, each user DB is reported here
@@ -76,6 +89,7 @@ Install-DbaMaintenanceSolution -Database master -CleanupTime 25 -InstallJobs -Re
 
 # But it's not enough to install the solution and jobs, the jobs need to be scheduled!
 Get-DbaAgentJob
+# TODO: Show there are no schedules
 
 # Using -Force here will set unspecified parameters to their defaults
 # Most importantly, schedule start date will be today and the end will be 9999-12-31
@@ -114,14 +128,17 @@ Find-DbaCommand Snapshot;
 New-DbaDbSnapshot -Database Movies -Name SQLSat;
 Get-DbaDbSnapshot -Database Movies;
 
+# TODO: Alter some data & show it
 # Restoring the snapshot reverts
 Restore-DbaDbSnapshot -Database Movies -Snapshot SQLSat;
+
+# TODO: Show the data is reverted
 
 # Removing the snapshot commits the changes
 Remove-DbaDbSnapshot -Database Movies -Snapshot SQLSat;
 
 # Work with backups
-Get-DbaBackupHistory
+Get-DbaDbBackupHistory
 
 # Test last backup
 Test-DbaLastBackup
@@ -140,3 +157,5 @@ Get-DbaLastGoodCheckDB
 # Copy table data
 
 # Look at table schema, indexes, constraints
+
+# Migrate 2016 to 2017
