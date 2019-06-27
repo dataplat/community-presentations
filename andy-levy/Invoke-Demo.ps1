@@ -21,16 +21,30 @@ $sql19 = Connect-DbaInstance -SqlInstance "localhost,14339" -SqlCredential $Cred
 # How many instances of SQL Server are on my laptop?
 Find-DbaInstance -ComputerName ctx1315;
 
+# Break into one of the instances
+Reset-DbaAdmin -WhatIf
+
 # What versions am I running?
 Test-DbaBuild -Latest -SqlInstance ctx1315\sql16, ctx1315\sql17 -Update;
-
-# Make sure Lock Pages in Memory and Instant File Initialization are set for my service account
-# You may need to run winrm quickconfig to allow WinRM connections to the server first
-Set-DbaPrivilege -ComputerName ctx1315 -Type IFI, LPIM;
 
 # Connect to the server
 # TODO: Show connecting via SMO first
 $SQL16Instance = Connect-DbaInstance -SqlInstance ctx1315\sql16;
+
+# Work with backups
+Get-DbaDbBackupHistory
+
+# Test last backup
+Test-DbaLastBackup
+
+# Restore point in time
+
+# Check up on DBCC status
+Get-DbaLastGoodCheckDB
+
+# Make sure Lock Pages in Memory and Instant File Initialization are set for my service account
+# You may need to run winrm quickconfig to allow WinRM connections to the server first
+Set-DbaPrivilege -ComputerName ctx1315 -Type IFI, LPIM;
 
 # TODO: POke around in server object
 
@@ -137,16 +151,6 @@ Restore-DbaDbSnapshot -Database Movies -Snapshot SQLSat;
 # Removing the snapshot commits the changes
 Remove-DbaDbSnapshot -Database Movies -Snapshot SQLSat;
 
-# Work with backups
-Get-DbaDbBackupHistory
-
-# Test last backup
-Test-DbaLastBackup
-
-# Restore point in time
-
-# Check up on DBCC status
-Get-DbaLastGoodCheckDB
 
 # Export DBA Instance stuff (for DR)
 
