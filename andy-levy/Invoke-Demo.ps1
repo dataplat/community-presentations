@@ -11,6 +11,27 @@ $WhatIfPreference = $true;
 
 # TODO: Answer questions in the abstract
 
+Find-DbaInstance -ComputerName localhost;
+Reset-DbaAdmin -SqlInstance localhost\sql16;
+Test-DbaBuild -SqlInstance localhost\sql16, localhost\sql17 -Latest -Update;
+Update-DbaInstance -ComputerName localhost -InstanceName SQL17;
+$SQL16 = Connect-DbaInstance -SqlInstance localhost\SQL16;
+Get-DbaDatabase -sqlinstance $SQL16;
+Get-DbaLastGoodCheckDb -SqlInstance $SQL16;
+Get-DbaDbBackupHistory -SqlInstance $SQL16;
+Get-DbaAgentJob -SqlInstance $SQL16;
+Install-DbaMaintenanceSolution -SqlInstance $SQL16 -Database Master -BackupLocation c:\sqlbackup\sql16 -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All;
+Install-DbaFirstResponderKit -SqlInstance $SQL16 -Database Master -Branch master;
+Install-DbaWhoIsActive -SqlInstance $SQL16 -Database master;
+# TODO: Set these two
+Test-DbaMaxMemory -SqlInstance $SQL16;
+Test-DbaMaxDop -SqlInstance $SQL16;
+Measure-DbaDbVirtualLogFile -SqlInstance $SQL16;
+Expand-DbaDbLogFile -SqlInstance $SQL16 -database movies -ShrinkLogFile -TargetLogSize 1024 -IncrementSize 1024;
+
+# TODO: Test backups
+
+
 # Work this in
 # Reset-DbaAdmin
 
