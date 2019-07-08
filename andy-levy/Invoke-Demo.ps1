@@ -11,26 +11,91 @@ $WhatIfPreference = $true;
 
 # TODO: Answer questions in the abstract
 
+# What SQL Servers exist?
+# Can scan your whole network or a single computer
+# Can scan each device several ways
 Find-DbaInstance -ComputerName localhost;
+
+# Found an instance BUT I can't get in!
+# Let's reset the sa password
 Reset-DbaAdmin -SqlInstance localhost\sql16;
+
+# Scan the instances to check what version & Service Pack/Cumulative Update level we're at
 Test-DbaBuild -SqlInstance localhost\sql16, localhost\sql17 -Latest -Update;
+
+# Update the SQL Server 2017 instance to the latest CU
 Update-DbaInstance -ComputerName localhost -InstanceName SQL17;
-$SQL16 = Connect-DbaInstance -SqlInstance localhost\SQL16;
-Get-DbaDatabase -sqlinstance $SQL16;
-Get-DbaLastGoodCheckDb -SqlInstance $SQL16;
-Get-DbaDbBackupHistory -SqlInstance $SQL16;
-Get-DbaAgentJob -SqlInstance $SQL16;
-Install-DbaMaintenanceSolution -SqlInstance $SQL16 -Database Master -BackupLocation c:\sqlbackup\sql16 -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All;
+
+# Let's connect to SQL Server
+# First via SMO
+
+Add-Type -AssemblyName "Microsoft.SqlServer.Smo,Version=11.0.0.0,Culture=neutral,PublicKeyToken=89845dcd8080cc91"
+$SQL16 = New-Object Microsoft.SqlServer.Management.Smo.Server “localhost\sql16”
+
+# Now via dbatools.
+# Connect-DbaInstance lets us use SQL or Windows auth, even works with Azure & MFA!
+
+$SQL16 = Connect-DbaInstance -SqlInstance localhost\SQL16 -ClientName "SQL Saturday";
+
+# TODO: Poke around in server object
+
+# Make sure Lock Pages in Memory and Instant File Initialization are set for my service account
+# You may need to run winrm quickconfig to allow WinRM connections to the server first
+Set-DbaPrivilege -ComputerName localhost -Type IFI, LPIM;
+
+New-DbaLogin -SqlInstance $SQL16 -Login "SQLSat" -PasswordExpiration:$false -PasswordPolicy:$false
+
+# Install a few of our standard tools
 Install-DbaFirstResponderKit -SqlInstance $SQL16 -Database Master -Branch master;
-Install-DbaWhoIsActive -SqlInstance $SQL16 -Database master;
+Install-DbaWhoIsActive -SqlInstance $SQL16 -Database Master;
+
+# We can see the application name in sp_whoisactive output
+Invoke-DbaWhoIsActive -SqlInstance $SQL16 -ShowSleepingSpids;
+
+# List all the user databases on the instance
+Get-DbaDatabase -sqlinstance $SQL16 -ExcludeSystem;
+
+# When did we last run DBCC CHECKDB?
+Get-DbaLastGoodCheckDb -SqlInstance $SQL16;
+
+# When did we last perform a backup?
+Get-DbaDbBackupHistory -SqlInstance $SQL16;
+
+# Is anyone doing maintenance around here?
+Get-DbaAgentJob -SqlInstance $SQL16;
+
+# Install Ola Hallengren's Maintenance Solution
+Install-DbaMaintenanceSolution -SqlInstance $SQL16 -Database Master -BackupLocation c:\sqlbackup\sql16 -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All;
+
+# TODO: Create job schedules and assign to the jobs
+
+# TODO: Run full backup job
+
+# Check our max server memory and degree of parallelism
 # TODO: Set these two
 Test-DbaMaxMemory -SqlInstance $SQL16;
+
+# MAXDOP is a database-scoped configuration so we can set it at the instance level but it may be overridden
 Test-DbaMaxDop -SqlInstance $SQL16;
+
+# What's our VLF situation?
 Measure-DbaDbVirtualLogFile -SqlInstance $SQL16;
+
+# Not good! Let's compact those and reset to something more reasonable
 Expand-DbaDbLogFile -SqlInstance $SQL16 -database movies -ShrinkLogFile -TargetLogSize 1024 -IncrementSize 1024;
 
 # TODO: Test backups
+# TODO: Database snapshots
 
+$SQL17 = Connect-DbaInstance -SqlInstance localhost\sql17 -ClientName "SQL Saturday";
+
+Copy-DbaDatabase -Database Movies -Source $SQL16 -Destination $SQL17 -UseLastBackup -WithReplace;
+
+# Copy SQL Login
+Copy-DbaLogin -Source $SQL16 -Destination $SQL17 -Login SQLSat;
+
+# Let's just move everything over
+Start-DbaMigration -Source $SQL16 -Destination $SQL17 -SetSourceReadOnly -DisableJobsOnDestination -UseLastBackup -Force;
 
 # Work this in
 # Reset-DbaAdmin
@@ -63,13 +128,6 @@ Test-DbaLastBackup
 # Check up on DBCC status
 Get-DbaLastGoodCheckDB
 
-# Make sure Lock Pages in Memory and Instant File Initialization are set for my service account
-# You may need to run winrm quickconfig to allow WinRM connections to the server first
-Set-DbaPrivilege -ComputerName ctx1315 -Type IFI, LPIM;
-
-# TODO: POke around in server object
-
-New-DbaLogin -SqlInstance $SQL16Instance -Login "SQLSat" -PasswordExpiration:$false -PasswordPolicy:$false
 
 # Let's look at settings through SMO
 $SQL16Instance.Settings;
