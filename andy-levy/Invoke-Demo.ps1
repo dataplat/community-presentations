@@ -24,7 +24,7 @@ Reset-DbaAdmin -SqlInstance localhost\sql16;
 Test-DbaBuild -SqlInstance localhost\sql16, localhost\sql17 -Latest -Update;
 
 # Update the SQL Server 2017 instance to the latest CU
-Update-DbaInstance -ComputerName localhost -InstanceName SQL17;
+Update-DbaInstance -ComputerName localhost -InstanceName SQL17 -Path C:\Updates;
 
 # Let's connect to SQL Server
 # First via SMO
@@ -79,6 +79,7 @@ $MinuteSchedule = New-DbaAgentSchedule -Schedule EveryMinute -FrequencyType Dail
 $FiveMinuteSchedule = New-DbaAgentSchedule -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 5 -Force;
 $TenMinuteSchedule = New-DbaAgentSchedule -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 10 -Force;
 
+# TODO:
 # Assign the one-minute interval schedule to Transaction Log backups
 # Assign the five-minute interval to Diff backups
 # Assign the ten-minute interval to Full backups
@@ -96,7 +97,7 @@ Test-DbaMaxDop -SqlInstance $SQL16;
 Measure-DbaDbVirtualLogFile -SqlInstance $SQL16;
 
 # Not good! Let's compact those and reset to something more reasonable
-Expand-DbaDbLogFile -SqlInstance $SQL16 -database movies -ShrinkLogFile -TargetLogSize 1024 -IncrementSize 1024;
+Expand-DbaDbLogFile -SqlInstance $SQL16 -database movies -ShrinkLogFile -shrinksize 512 -TargetLogSize 1024 -IncrementSize 1024;
 
 # TODO: Test backups
 # TODO: Database snapshots
