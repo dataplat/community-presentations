@@ -43,6 +43,10 @@ $SQL16 = Connect-DbaInstance -SqlInstance localhost\SQL16 -ClientName "SQL Satur
 # You may need to run winrm quickconfig to allow WinRM connections to the server first
 Set-DbaPrivilege -ComputerName localhost -Type IFI, LPIM;
 
+# Check some other configuration settings
+Get-DbaSpConfigure -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads
+Set-DbaSpConfigure -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1 -WhatIf
+
 New-DbaLogin -SqlInstance $SQL16 -Login "SQLSat" -PasswordExpiration:$false -PasswordPolicy:$false
 
 # Install a few of our standard tools
@@ -68,6 +72,16 @@ Get-DbaAgentJob -SqlInstance $SQL16;
 Install-DbaMaintenanceSolution -SqlInstance $SQL16 -Database Master -BackupLocation c:\sqlbackup\sql16 -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All;
 
 # TODO: Create job schedules and assign to the jobs
+
+# Using -Force here will set unspecified parameters to their defaults
+# Most importantly, schedule start date will be today and the end will be 9999-12-31
+$MinuteSchedule = New-DbaAgentSchedule -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 1 -Force;
+$FiveMinuteSchedule = New-DbaAgentSchedule -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 5 -Force;
+$TenMinuteSchedule = New-DbaAgentSchedule -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 10 -Force;
+
+# Assign the one-minute interval schedule to Transaction Log backups
+# Assign the five-minute interval to Diff backups
+# Assign the ten-minute interval to Full backups
 
 # TODO: Run full backup job
 
@@ -163,9 +177,6 @@ Set-DbaMaxDop -MaxDop 8 -whatif;
 Set-DbaMaxDop -MaxDop 8 -AllDatabases -whatif;
 Set-DbaMaxDop -MaxDop 2 -Database SSISDB -whatif;
 
-# Check some other configuration settings
-Get-DbaSpConfigure -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads
-Set-DbaSpConfigure -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1 -WhatIf
 
 # We can install Brent Ozar's First Responder Kit to any database, and select the release or development branch
 Install-DbaFirstResponderKit -Database master;
@@ -182,17 +193,6 @@ Install-DbaMaintenanceSolution -Database master -CleanupTime 25 -InstallJobs -Re
 
 # But it's not enough to install the solution and jobs, the jobs need to be scheduled!
 Get-DbaAgentJob
-# TODO: Show there are no schedules
-
-# Using -Force here will set unspecified parameters to their defaults
-# Most importantly, schedule start date will be today and the end will be 9999-12-31
-$MinuteSchedule = New-DbaAgentSchedule -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 1 -Force;
-$FiveMinuteSchedule = New-DbaAgentSchedule -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 5 -Force;
-$TenMinuteSchedule = New-DbaAgentSchedule -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 10 -Force;
-
-# Assign the one-minute interval schedule to Transaction Log backups
-# Assign the five-minute interval to Diff backups
-# Assign the ten-minute interval to Full backups
 
 # Where are the backups being written?
 Get-DbaDefaultPath
