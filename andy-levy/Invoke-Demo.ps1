@@ -1,15 +1,6 @@
 Install-module dbatools;
 update-module dbatools;
-$VerbosePreference = 'SilentlyContinue';
-import-module dbatools -Verbose:$false;
-$VerbosePreference = 'Continue';
-
-# Set this to your dev instance for safety
-$PSDefaultParameterValues['*:SqlInstance'] = 'ctx1315\sql16';
-
-$WhatIfPreference = $true;
-
-# TODO: Answer questions in the abstract
+import-module dbatools;
 
 # What SQL Servers exist?
 # Can scan your whole network or a single computer
@@ -44,17 +35,15 @@ $SQL16 = Connect-DbaInstance -SqlInstance localhost\SQL16 -ClientName "SQL Satur
 Set-DbaPrivilege -ComputerName localhost -Type IFI, LPIM;
 
 # Check some other configuration settings
-Get-DbaSpConfigure -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads
-Set-DbaSpConfigure -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1 -WhatIf
-
-New-DbaLogin -SqlInstance $SQL16 -Login "SQLSat" -PasswordExpiration:$false -PasswordPolicy:$false
+Get-DbaSpConfigure -sqlinstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads
+Set-DbaSpConfigure -SQLInstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1 -WhatIf
 
 # Install a few of our standard tools
 Install-DbaFirstResponderKit -SqlInstance $SQL16 -Database Master -Branch master;
 Install-DbaWhoIsActive -SqlInstance $SQL16 -Database Master;
 
 # We can see the application name in sp_whoisactive output
-Invoke-DbaWhoIsActive -SqlInstance $SQL16 -ShowSleepingSpids;
+Invoke-DbaWhoIsActive -SqlInstance $SQL16 -ShowOwnSpid;
 
 # List all the user databases on the instance
 Get-DbaDatabase -sqlinstance $SQL16 -ExcludeSystem;
@@ -71,36 +60,68 @@ Get-DbaAgentJob -SqlInstance $SQL16;
 # Install Ola Hallengren's Maintenance Solution
 Install-DbaMaintenanceSolution -SqlInstance $SQL16 -Database Master -BackupLocation c:\sqlbackup\sql16 -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All;
 
-# TODO: Create job schedules and assign to the jobs
-
 # Using -Force here will set unspecified parameters to their defaults
 # Most importantly, schedule start date will be today and the end will be 9999-12-31
-$MinuteSchedule = New-DbaAgentSchedule -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 1 -Force;
-$FiveMinuteSchedule = New-DbaAgentSchedule -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 5 -Force;
-$TenMinuteSchedule = New-DbaAgentSchedule -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 10 -Force;
+$MinuteSchedule = New-DbaAgentSchedule -SqlInstance $SQL16 -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 1 -Force;
 
-# TODO:
+$FiveMinuteSchedule = New-DbaAgentSchedule -SqlInstance $SQL16 -Schedule EveryFiveMinutes -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 5 -Force;
+
+$TenMinuteSchedule = New-DbaAgentSchedule -SqlInstance $SQL16 -Schedule EveryTenMinutes -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 10 -Force;
+
 # Assign the one-minute interval schedule to Transaction Log backups
+Set-DbaAgentJob -Job "DatabaseBackup - USER_DATABASES - LOG" -SqlInstance $SQL16 -Schedule $MinuteSchedule;
 # Assign the five-minute interval to Diff backups
+Set-DbaAgentJob -Job "DatabaseBackup - USER_DATABASES - DIFF" -SqlInstance $SQL16 -Schedule $FiveMinuteSchedule;
 # Assign the ten-minute interval to Full backups
+Set-DbaAgentJob -Job "DatabaseBackup - USER_DATABASES - FULL" -SqlInstance $SQL16 -Schedule $TenMinuteSchedule;
 
-# TODO: Run full backup job
+# Run full backup job
+$FullBackupJob = Get-DbaAgentJob -SqlInstance $SQL16 -Job "DatabaseBackup - USER_DATABASES - FULL";
 
-# Check our max server memory and degree of parallelism
-# TODO: Set these two
-Test-DbaMaxMemory -SqlInstance $SQL16;
+# First let's look at the SMO object that was returned
+$FullBackupJob;
 
+# Now we can start it
+$FullBackupJob.Start();
+
+# Because MAXDOP is now a database-scoped configuration, each user DB is reported here
 # MAXDOP is a database-scoped configuration so we can set it at the instance level but it may be overridden
 Test-DbaMaxDop -SqlInstance $SQL16;
+
+
+# We can do this at the instance level, or for individual databases, or for all databases
+Set-DbaMaxDop -sqlinstance $sql16 -MaxDop 8 -whatif;
+Set-DbaMaxDop -sqlinstance $sql16 -MaxDop 8 -AllDatabases -whatif;
+Set-DbaMaxDop -sqlinstance $sql16 -MaxDop 2 -Database Movies -whatif;
+
+# Check our max server memory
+# This uses Jonathan Kehiyas's formula https://www.sqlskills.com/blogs/jonathan/how-much-memory-does-my-sql-server-actually-need/
+Test-DbaMaxMemory -SqlInstance $SQL16;
+
+# Can pipe the output of this function right into setting the max memory
+Test-DbaMaxMemory -sqlinstance $SQL16 | Set-DbaMaxMemory -sqlinstance $SQL16 -WhatIf;
+Test-DbaMaxMemory -sqlinstance $SQL16 | Set-DbaMaxMemory -sqlinstance $SQL16 -Verbose;
 
 # What's our VLF situation?
 Measure-DbaDbVirtualLogFile -SqlInstance $SQL16;
 
 # Not good! Let's compact those and reset to something more reasonable
+# Shrink down to (we hope) 512MB, then re-expand back to 1024MB and then set a growth increment of 1024MB
 Expand-DbaDbLogFile -SqlInstance $SQL16 -database movies -ShrinkLogFile -shrinksize 512 -TargetLogSize 1024 -IncrementSize 1024;
 
-# TODO: Test backups
+Measure-DbaDbVirtualLogFile -SqlInstance $SQL16;
+
+# Test our database backups
+Test-DbaLastBackup -SqlInstance $SQL16 -Database Movies;
+
 # TODO: Database snapshots
+
+# Create new login
+
+New-DbaLogin -SqlInstance $SQL16 -Login "SQLSat" -PasswordExpiration:$false -PasswordPolicy:$false
+
+Get-DbaLogin -SqlInstance $SQL16 -Login SQLSat;
+Set-DbaLogin -SqlInstance $SQL16 -Login SQLSat -AddRole serveradmin, sysadmin
 
 $SQL17 = Connect-DbaInstance -SqlInstance localhost\sql17 -ClientName "SQL Saturday";
 
