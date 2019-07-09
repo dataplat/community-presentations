@@ -133,7 +133,7 @@ Copy-DbaLogin -Source $SQL16 -Destination $SQL17 -Login SQLSat;
 
 # Let's just move everything over
 Start-DbaMigration -Source $SQL16 -Destination $SQL17 -SetSourceReadOnly -DisableJobsOnDestination -UseLastBackup -Force;
-
+#####################
 # Work this in
 # Reset-DbaAdmin
 
