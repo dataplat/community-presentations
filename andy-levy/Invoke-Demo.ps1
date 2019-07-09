@@ -44,6 +44,7 @@ Install-DbaWhoIsActive -SqlInstance $SQL16 -Database Master;
 
 # We can see the application name in sp_whoisactive output
 Invoke-DbaWhoIsActive -SqlInstance $SQL16 -ShowOwnSpid;
+Invoke-DbaWhoIsActive -SqlInstance $SQL16 -ShowOwnSpid | Out-Gridview;
 
 # List all the user databases on the instance
 Get-DbaDatabase -sqlinstance $SQL16 -ExcludeSystem;

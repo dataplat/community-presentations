@@ -1,6 +1,6 @@
 import-module dbatools,BurntToast -Verbose:$false;
 
-$PSDefaultParameterValues['*:SqlInstance'] = 'ctx1315\sql16';
+$PSDefaultParameterValues['*:SqlInstance'] = 'localhost\sql16';
 $PSDefaultParameterValues['Import-DbaCsv:Database'] = 'Movies';
 $PSDefaultParameterValues['Import-DbaCsv:Schema'] = 'dbo';
 $PSDefaultParameterValues['Import-DbaCsv:Delimiter'] = [System.Convert]::ToChar(9);
@@ -26,7 +26,7 @@ $ColumnMap = @{
     attributes      = 'AttributeList'
     isOriginalTitle = 'IsOriginalTitle'
 };
-Import-DbaCsv -table Aka -Path 'C:\Users\andy.levy\OneDrive - Volaris Group\dbatools talk\MovieData\title.akas.tsv';
+Import-DbaCsv -table Aka -Path 'C:\DataToImport\Movies\title.akas.tsv';
 
 # Title Basics
 $ColumnMap = @{
@@ -40,7 +40,7 @@ $ColumnMap = @{
     runtimeMinutes = 'Runtime'
     genres         = 'GenreList'
 };
-Import-DbaCsv -table TitleBasics -Path 'C:\Users\andy.levy\OneDrive - Volaris Group\dbatools talk\MovieData\title.basics.tsv';
+Import-DbaCsv -table TitleBasics -Path 'C:\DataToImport\Movies\title.basics.tsv';
 
 # Crew
 $ColumnMap = @{
@@ -48,7 +48,7 @@ $ColumnMap = @{
     directors = 'DirectorList'
     writers   = 'WriterList'
 };
-Import-DbaCsv -table Crew -Path 'C:\Users\andy.levy\OneDrive - Volaris Group\dbatools talk\MovieData\title.crew.tsv';
+Import-DbaCsv -table Crew -Path 'C:\DataToImport\Movies\title.crew.tsv';
 
 #Episodes
 $ColumnMap = @{
@@ -57,7 +57,7 @@ $ColumnMap = @{
     seasonNumber  = 'Season'
     episodeNumber = 'Episode'
 };
-Import-DbaCsv -table Episode -Path 'C:\Users\andy.levy\OneDrive - Volaris Group\dbatools talk\MovieData\title.episode.tsv';
+Import-DbaCsv -table Episode -Path 'C:\DataToImport\Movies\title.episode.tsv';
 
 # Principal
 $ColumnMap = @{
@@ -68,7 +68,7 @@ $ColumnMap = @{
     job        = 'JobName'
     characters = 'Role'
 };
-Import-DbaCsv -table Principal -Path 'C:\Users\andy.levy\OneDrive - Volaris Group\dbatools talk\MovieData\title.principals.tsv';
+Import-DbaCsv -table Principal -Path 'C:\DataToImport\Movies\title.principals.tsv';
 
 # Ratings
 $ColumnMap = @{
@@ -76,7 +76,7 @@ $ColumnMap = @{
     averageRating = 'AvgRating'
     numVotes      = 'NumVotes'
 };
-Import-DbaCsv -table Ratings -Path 'C:\Users\andy.levy\OneDrive - Volaris Group\dbatools talk\MovieData\title.ratings.tsv';
+Import-DbaCsv -table Ratings -Path 'C:\DataToImport\Movies\title.ratings.tsv';
 
 # Names
 $ColumnMap = @{
@@ -87,6 +87,6 @@ $ColumnMap = @{
     primaryProfession = 'ProfessionList'
     knownForTitles    = 'KnownForList'
 };
-Import-DbaCsv -table NameBasics -Path 'C:\Users\andy.levy\OneDrive - Volaris Group\dbatools talk\MovieData\name.basics.tsv';
+Import-DbaCsv -table NameBasics -Path 'C:\DataToImport\Movies\name.basics.tsv';
 
 New-BurntToastNotification -Text "IMDB Import Complete"
