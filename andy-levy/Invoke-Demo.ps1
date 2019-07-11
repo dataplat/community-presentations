@@ -1,4 +1,4 @@
-Install-module dbatools;
+Install-module dbatools -Scope CurrentUser;
 update-module dbatools;
 import-module dbatools;
 
