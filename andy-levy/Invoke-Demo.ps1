@@ -115,6 +115,8 @@ Test-DbaPowerPlan -ComputerName localhost;
 Set-DbaPowerPlan -ComputerName localhost -PowerPlan "High Performance";
 <#
 what's this?
+Line 199 of Set-DbaPowerPlan. Probably just need pscustomobject[] for the InputObject parameter
+
 PS C:\Windows\system32> test-dbapowerplan -computername localhost| Set-DbaPowerPlan -ComputerName localhost
 Method invocation failed because [System.Management.Automation.PSObject] does not contain a method named 'op_Addition'
 At C:\Users\andy\Documents\WindowsPowerShell\Modules\dbatools\1.0.21\allcommands.ps1:62695 char:13
@@ -151,6 +153,8 @@ Copy-DbaDatabase -Database Movies -Source $SQL16 -Destination $SQL17 -UseLastBac
 
 # Copy SQL Login
 Copy-DbaLogin -Source $SQL16 -Destination $SQL17 -Login SQLSat;
+
+# TODO: Export scripts
 
 # Let's just move everything over
 Start-DbaMigration -Source $SQL16 -Destination $SQL17 -SetSourceReadOnly -DisableJobsOnDestination -UseLastBackup -Force;
