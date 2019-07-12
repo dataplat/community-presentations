@@ -103,6 +103,9 @@ Test-DbaMaxMemory -SqlInstance $SQL16;
 Test-DbaMaxMemory -sqlinstance $SQL16 | Set-DbaMaxMemory -sqlinstance $SQL16 -WhatIf;
 Test-DbaMaxMemory -sqlinstance $SQL16 | Set-DbaMaxMemory -sqlinstance $SQL16 -Verbose;
 
+# Check power settings
+Test-DbaPowerPlan
+
 # What's our VLF situation?
 Measure-DbaDbVirtualLogFile -SqlInstance $SQL16;
 
