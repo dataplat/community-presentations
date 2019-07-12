@@ -34,6 +34,13 @@ $SQL16 = Connect-DbaInstance -SqlInstance localhost\SQL16 -ClientName "SQL Satur
 # You may need to run winrm quickconfig to allow WinRM connections to the server first
 Set-DbaPrivilege -ComputerName localhost -Type IFI, LPIM;
 
+<#
+WARNING: NT Service\MSSQL$SQL16 already has Instant File Initialization Privilege on WIN-0P9JV5IVQG2
+WARNING: NT Service\MSSQL$SQL17 already has Instant File Initialization Privilege on WIN-0P9JV5IVQG2
+WARNING: NT Service\MSSQL$SQL16 already has Lock Pages in Memory Privilege on WIN-0P9JV5IVQG2
+WARNING: NT Service\MSSQL$SQL17 already has Lock Pages in Memory Privilege on WIN-0P9JV5IVQG2
+#>
+
 # Check some other configuration settings
 Get-DbaSpConfigure -sqlinstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads
 Set-DbaSpConfigure -SQLInstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1 -WhatIf
@@ -59,7 +66,7 @@ Get-DbaDbBackupHistory -SqlInstance $SQL16;
 Get-DbaAgentJob -SqlInstance $SQL16;
 
 # Install Ola Hallengren's Maintenance Solution
-Install-DbaMaintenanceSolution -SqlInstance $SQL16 -Database Master -BackupLocation c:\sqlbackup\sql16 -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All;
+Install-DbaMaintenanceSolution -SqlInstance $SQL16 -Database Master -BackupLocation c:\sqlbackup\sql16 -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All -Verbose;
 
 # Using -Force here will set unspecified parameters to their defaults
 # Most importantly, schedule start date will be today and the end will be 9999-12-31
@@ -104,7 +111,18 @@ Test-DbaMaxMemory -sqlinstance $SQL16 | Set-DbaMaxMemory -sqlinstance $SQL16 -Wh
 Test-DbaMaxMemory -sqlinstance $SQL16 | Set-DbaMaxMemory -sqlinstance $SQL16 -Verbose;
 
 # Check power settings
-Test-DbaPowerPlan
+Test-DbaPowerPlan -ComputerName localhost;
+Set-DbaPowerPlan -ComputerName localhost -PowerPlan "High Performance";
+<#
+what's this?
+PS C:\Windows\system32> test-dbapowerplan -computername localhost| Set-DbaPowerPlan -ComputerName localhost
+Method invocation failed because [System.Management.Automation.PSObject] does not contain a method named 'op_Addition'
+At C:\Users\andy\Documents\WindowsPowerShell\Modules\dbatools\1.0.21\allcommands.ps1:62695 char:13
++             $InputObject += Get-DbaPowerPlan -ComputerName $ComputerN ...
++             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (op_Addition:String) [], RuntimeException
+    + FullyQualifiedErrorId : MethodNotFound
+    #>
 
 # What's our VLF situation?
 Measure-DbaDbVirtualLogFile -SqlInstance $SQL16;
@@ -121,7 +139,7 @@ Test-DbaLastBackup -SqlInstance $SQL16 -Database Movies;
 # TODO: Database snapshots
 
 # Create new login
-
+# Works for Windows Auth too!
 New-DbaLogin -SqlInstance $SQL16 -Login "SQLSat" -PasswordExpiration:$false -PasswordPolicy:$false
 
 Get-DbaLogin -SqlInstance $SQL16 -Login SQLSat;
