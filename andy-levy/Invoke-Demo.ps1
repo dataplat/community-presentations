@@ -8,7 +8,6 @@ import-module dbatools;
 Find-DbaInstance -ComputerName localhost;
 
 # Found an instance BUT I can't get in!
-# Let's reset the sa password
 Reset-DbaAdmin -SqlInstance localhost\sql16;
 
 # Scan the instances to check what version & Service Pack/Cumulative Update level we're at
@@ -42,7 +41,7 @@ WARNING: NT Service\MSSQL$SQL17 already has Lock Pages in Memory Privilege on WI
 #>
 
 # Check some other configuration settings
-Get-DbaSpConfigure -sqlinstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads
+Get-DbaSpConfigure -SqlInstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads
 Set-DbaSpConfigure -SQLInstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1 -WhatIf
 
 # Install a few of our standard tools
@@ -111,10 +110,11 @@ $FullBackupJob.Start();
 Test-DbaMaxDop -SqlInstance $SQL16;
 
 # We can do this at the instance level, or for individual databases, or for all databases
-Set-DbaMaxDop -sqlinstance $sql16 -MaxDop 8 -whatif;
-Set-DbaMaxDop -sqlinstance $sql16 -MaxDop 8 -AllDatabases -whatif;
-Set-DbaMaxDop -sqlinstance $sql16 -MaxDop 2 -Database Movies -verbose -whatif;
-Test-DbaMaxDop -SqlInstance $SQL16 | Set-DbaMaxDop -sqlinstance $sql16 -MaxDop 2 -Database Movies -verbose;
+Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 8 -whatif;
+Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 8 -AllDatabases -whatif;
+Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -Database Movies -verbose -whatif;
+Test-DbaMaxDop -SqlInstance $SQL16 | Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -Database Movies -verbose;
+
 $SQL16.Refresh();
 Test-DbaMaxDop -SqlInstance $SQL16
 
@@ -123,8 +123,8 @@ Test-DbaMaxDop -SqlInstance $SQL16
 Test-DbaMaxMemory -SqlInstance $SQL16;
 
 # Can pipe the output of this function right into setting the max memory
-Test-DbaMaxMemory -sqlinstance $SQL16 | Set-DbaMaxMemory -sqlinstance $SQL16 -WhatIf;
-Test-DbaMaxMemory -sqlinstance $SQL16 | Set-DbaMaxMemory -sqlinstance $SQL16 -Verbose;
+Test-DbaMaxMemory -SqlInstance $SQL16 | Set-DbaMaxMemory -SqlInstance $SQL16 -WhatIf;
+Test-DbaMaxMemory -SqlInstance $SQL16 | Set-DbaMaxMemory -SqlInstance $SQL16 -Verbose;
 
 # Check power settings
 Test-DbaPowerPlan -ComputerName localhost;
@@ -141,7 +141,7 @@ Restore-DbaDatabase -SqlInstance $SQL16 -Path C:\DataToImport\CacheDB -DatabaseN
 # Let's restore 
 Restore-DbaDatabase -SqlInstance $SQL16 -Path C:\DataToImport\CacheDB -DatabaseName CacheDB -MaintenanceSolutionBackup -Verbose -RestoreTime '2019-07-11 21:50:00';
 <#
-dbatools:
+dbatools just:
 * Looked through all the backups
 * Found the latest FULL and all the T-Logs through the one immediately after the RestoreTime
 * Restored the full chain right up to 21:50:00
@@ -161,9 +161,9 @@ Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | Out-GridView;
 
 # Not good! Let's compact those and reset to something more reasonable
 # Shrink down to (we hope) 512MB, then re-expand back to 1024MB and then set a growth increment of 1024MB
-Expand-DbaDbLogFile -SqlInstance $SQL16 -database movies -ShrinkLogFile -shrinksize 512 -TargetLogSize 1024 -IncrementSize 1024;
+Expand-DbaDbLogFile -SqlInstance $SQL16 -Database movies -ShrinkLogFile -ShrinkSize 512 -TargetLogSize 1024 -IncrementSize 1024;
 
-Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | select-object -property * | Out-GridView;
+Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | Select-Object -Property * | Out-GridView;
 
 
 # Test our database backups
@@ -207,7 +207,7 @@ Get-DbaAgentJob -SqlInstance $SQL17 | Foreach-object {$PSItem.IsEnabled = $true;
 
 
 $Cred = Get-Credential -UserName "sa" -Message "Container SA";
-$sql17 = Connect-DbaInstance -SqlInstance "localhost,14337" -SqlCredential $Cred
+$SQL17 = Connect-DbaInstance -SqlInstance "localhost,14337" -SqlCredential $Cred
 $sql19 = Connect-DbaInstance -SqlInstance "localhost,14339" -SqlCredential $Cred
 
 
