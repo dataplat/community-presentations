@@ -41,8 +41,9 @@ WARNING: NT Service\MSSQL$SQL17 already has Lock Pages in Memory Privilege on WI
 #>
 
 # Check some other configuration settings
-Get-DbaSpConfigure -SqlInstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads
-Set-DbaSpConfigure -SQLInstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1 -WhatIf
+Get-DbaSpConfigure -SqlInstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads | Out-Gridview;
+Set-DbaSpConfigure -SQLInstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1 -WhatIf;
+Set-DbaSpConfigure -SQLInstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1;
 
 # Install a few of our standard tools
 Install-DbaFirstResponderKit -SqlInstance $SQL16 -Database Master -Branch master;
@@ -55,11 +56,12 @@ Invoke-DbaWhoIsActive -SqlInstance $SQL16 -ShowOwnSpid | Out-Gridview;
 # List all the user databases on the instance
 Get-DbaDatabase -sqlinstance $SQL16 -ExcludeSystem;
 
-# When did we last run DBCC CHECKDB?
-Get-DbaLastGoodCheckDb -SqlInstance $SQL16;
-
 # When did we last perform a backup?
 Get-DbaDbBackupHistory -SqlInstance $SQL16;
+Get-DbaDbBackupHistory -SqlInstance $SQL16 -Verbose;
+
+# When did we last run DBCC CHECKDB?
+Get-DbaLastGoodCheckDb -SqlInstance $SQL16 -Verbose;
 
 # Is anyone doing maintenance around here?
 Get-DbaAgentJob -SqlInstance $SQL16;
@@ -113,17 +115,18 @@ Test-DbaMaxDop -SqlInstance $SQL16;
 Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 8 -whatif;
 Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 8 -AllDatabases -whatif;
 Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -Database Movies -verbose -whatif;
-Test-DbaMaxDop -SqlInstance $SQL16 | Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -Database Movies -verbose;
+
+Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -verbose;
+Test-DbaMaxDop -SqlInstance $SQL16;
 
 $SQL16.Refresh();
-Test-DbaMaxDop -SqlInstance $SQL16
+Test-DbaMaxDop -SqlInstance $SQL16;
 
 # Check our max server memory
 # This uses Jonathan Kehiyas's formula https://www.sqlskills.com/blogs/jonathan/how-much-memory-does-my-sql-server-actually-need/
 Test-DbaMaxMemory -SqlInstance $SQL16;
 
 # Can pipe the output of this function right into setting the max memory
-Test-DbaMaxMemory -SqlInstance $SQL16 | Set-DbaMaxMemory -SqlInstance $SQL16 -WhatIf;
 Test-DbaMaxMemory -SqlInstance $SQL16 | Set-DbaMaxMemory -SqlInstance $SQL16 -Verbose;
 
 # Check power settings
@@ -135,7 +138,7 @@ https://github.com/sqlcollaborative/dbatools/issues/5895
 #>
 
 # Add a couple more databases
-invoke-item C:\DataToImport\CacheDB;
+invoke-item -Path C:\DataToImport\;
 # What would the T-SQL look like?
 Restore-DbaDatabase -SqlInstance $SQL16 -Path C:\DataToImport\CacheDB -DatabaseName CacheDB -MaintenanceSolutionBackup -RestoreTime '2019-07-11 21:50:00' -OutputScriptOnly;
 # Let's restore 
@@ -155,6 +158,7 @@ $SQL16.Refresh();
 $SQL16.Databases.Refresh();
 
 Get-DbaDatabase -SqlInstance $SQL16;
+Get-DbaDatabase -SqlInstance $SQL16 | Out-GridView;
 
 # What's our VLF situation?
 Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | Out-GridView;
@@ -165,7 +169,6 @@ Expand-DbaDbLogFile -SqlInstance $SQL16 -Database movies -ShrinkLogFile -ShrinkS
 
 Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | Select-Object -Property * | Out-GridView;
 
-
 # Test our database backups
 Test-DbaLastBackup -SqlInstance $SQL16 -Database Movies;
 
@@ -175,7 +178,6 @@ Test-DbaLastBackup -SqlInstance $SQL16 -Database Movies;
 # Works for Windows Auth too!
 New-DbaLogin -SqlInstance $SQL16 -Login "SQLSat" -PasswordExpiration:$false -PasswordPolicy:$false
 
-Get-DbaLogin -SqlInstance $SQL16 -Login SQLSat;
 Set-DbaLogin -SqlInstance $SQL16 -Login SQLSat -AddRole serveradmin, sysadmin
 
 
@@ -184,9 +186,10 @@ New-Item -ItemType Directory -Path C:\SQLMigration;
 
 $SQL17 = Connect-DbaInstance -SqlInstance localhost\sql17 -ClientName "SQL Saturday";
 
-Copy-DbaDatabase -Database Movies -Source $SQL16 -Destination $SQL17 -BackupRestore -SharedPath C:\SQLMigration -SetSourceReadOnly -WithReplace;
+Copy-DbaDatabase -Database CacheDB -Source $SQL16 -Destination $SQL17 -BackupRestore -SharedPath C:\SQLMigration -WithReplace -Verbose;
 
 # Copy SQL Login
+Get-DbaLogin -SqlInstance $SQL17 -Login "SQLSat"
 Copy-DbaLogin -Source $SQL16 -Destination $SQL17 -Login SQLSat;
 Get-DbaLogin -SqlInstance $SQL17 -Login "SQLSat"
 
@@ -194,7 +197,7 @@ Get-DbaLogin -SqlInstance $SQL17 -Login "SQLSat"
 Export-DbaLogin -SqlInstance $SQL16 -Path C:\SQLMigration;
 Export-DbaSpConfigure $SQL16 -Path C:\SQLMigration;
 Get-DbaDbMailConfig -SqlInstance $SQL16 | Export-DbaScript -Path C:\SQLMigration;
-Copy-DbaAgentJob -Source $SQL16 -Destination $SQL17 -DisableOnSource -DisableOnDestination
+Copy-DbaAgentJob -Source $SQL16 -Destination $SQL17 -DisableOnDestination
 
 # Optional: Export-DbaInstance -SqlInstance $SQL16 -Path C:\SQLMigration;
 
