@@ -68,6 +68,20 @@ Get-DbaAgentJob -SqlInstance $SQL16;
 # Install Ola Hallengren's Maintenance Solution
 Install-DbaMaintenanceSolution -SqlInstance $SQL16 -Database Master -BackupLocation c:\sqlbackup\sql16 -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All -Verbose;
 
+<#
+Exception!
+PS C:\Users\andy\Documents\GitHub\community-presentations\andy-levy> Install-DbaMaintenanceSolution -SqlInstance $SQL16 -Database Master -BackupLocation c:\sqlbackup\sql16 -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All -Verbose;
+VERBOSE: GET https://github.com/olahallengren/sql-server-maintenance-solution/archive/master.zip with 0-byte payload
+VERBOSE: received -1-byte response of content type application/zip
+VERBOSE: Performing the operation "Dropping all objects created by Ola's Maintenance Solution" on target "WIN-0P9JV5IVQG2\sql16".
+VERBOSE: Performing the operation "Installing MaintenanceSolution.sql" on target "WIN-0P9JV5IVQG2\sql16".
+WARNING: [14:08:18][Install-DbaMaintenanceSolution] Could not execute MaintenanceSolution.sql in Master on WIN-0P9JV5IVQG2\sql16 | Invalid object name '#Config'.
+
+ComputerName    InstanceName SqlInstance           Results
+------------    ------------ -----------           -------
+WIN-0P9JV5IVQG2 SQL16        WIN-0P9JV5IVQG2\sql16 Success
+#>
+
 # Using -Force here will set unspecified parameters to their defaults
 # Most importantly, schedule start date will be today and the end will be 9999-12-31
 $MinuteSchedule = New-DbaAgentSchedule -SqlInstance $SQL16 -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 1 -Force;
@@ -96,11 +110,13 @@ $FullBackupJob.Start();
 # MAXDOP is a database-scoped configuration so we can set it at the instance level but it may be overridden
 Test-DbaMaxDop -SqlInstance $SQL16;
 
-
 # We can do this at the instance level, or for individual databases, or for all databases
 Set-DbaMaxDop -sqlinstance $sql16 -MaxDop 8 -whatif;
 Set-DbaMaxDop -sqlinstance $sql16 -MaxDop 8 -AllDatabases -whatif;
-Set-DbaMaxDop -sqlinstance $sql16 -MaxDop 2 -Database Movies -whatif;
+Set-DbaMaxDop -sqlinstance $sql16 -MaxDop 2 -Database Movies -verbose -whatif;
+Test-DbaMaxDop -SqlInstance $SQL16 | Set-DbaMaxDop -sqlinstance $sql16 -MaxDop 2 -Database Movies -verbose;
+$SQL16.Refresh();
+Test-DbaMaxDop -SqlInstance $SQL16
 
 # Check our max server memory
 # This uses Jonathan Kehiyas's formula https://www.sqlskills.com/blogs/jonathan/how-much-memory-does-my-sql-server-actually-need/
@@ -114,26 +130,41 @@ Test-DbaMaxMemory -sqlinstance $SQL16 | Set-DbaMaxMemory -sqlinstance $SQL16 -Ve
 Test-DbaPowerPlan -ComputerName localhost;
 Set-DbaPowerPlan -ComputerName localhost -PowerPlan "High Performance";
 <#
-what's this?
-Line 199 of Set-DbaPowerPlan. Probably just need pscustomobject[] for the InputObject parameter
+See Issue #5895 for request to add pipeline support.
+https://github.com/sqlcollaborative/dbatools/issues/5895
+#>
 
-PS C:\Windows\system32> test-dbapowerplan -computername localhost| Set-DbaPowerPlan -ComputerName localhost
-Method invocation failed because [System.Management.Automation.PSObject] does not contain a method named 'op_Addition'
-At C:\Users\andy\Documents\WindowsPowerShell\Modules\dbatools\1.0.21\allcommands.ps1:62695 char:13
-+             $InputObject += Get-DbaPowerPlan -ComputerName $ComputerN ...
-+             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : InvalidOperation: (op_Addition:String) [], RuntimeException
-    + FullyQualifiedErrorId : MethodNotFound
-    #>
+# Add a couple more databases
+invoke-item C:\DataToImport\CacheDB;
+# What would the T-SQL look like?
+Restore-DbaDatabase -SqlInstance $SQL16 -Path C:\DataToImport\CacheDB -DatabaseName CacheDB -MaintenanceSolutionBackup -RestoreTime '2019-07-11 21:50:00' -OutputScriptOnly;
+# Let's restore 
+Restore-DbaDatabase -SqlInstance $SQL16 -Path C:\DataToImport\CacheDB -DatabaseName CacheDB -MaintenanceSolutionBackup -Verbose -RestoreTime '2019-07-11 21:50:00';
+<#
+dbatools:
+* Looked through all the backups
+* Found the latest FULL and all the T-Logs through the one immediately after the RestoreTime
+* Restored the full chain right up to 21:50:00
+#>
+Restore-DbaDatabase -SqlInstance $SQL16 -Path C:\DataToImport\AdventureWorks2016.bak -DatabaseName AdvetureWorks2016 -Verbose;
+
+# Refresh instance-level details
+$SQL16.Refresh();
+
+# Refresh the list of databases
+$SQL16.Databases.Refresh();
+
+Get-DbaDatabase -SqlInstance $SQL16;
 
 # What's our VLF situation?
-Measure-DbaDbVirtualLogFile -SqlInstance $SQL16;
+Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | Out-GridView;
 
 # Not good! Let's compact those and reset to something more reasonable
 # Shrink down to (we hope) 512MB, then re-expand back to 1024MB and then set a growth increment of 1024MB
 Expand-DbaDbLogFile -SqlInstance $SQL16 -database movies -ShrinkLogFile -shrinksize 512 -TargetLogSize 1024 -IncrementSize 1024;
 
-Measure-DbaDbVirtualLogFile -SqlInstance $SQL16;
+Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | select-object -property * | Out-GridView;
+
 
 # Test our database backups
 Test-DbaLastBackup -SqlInstance $SQL16 -Database Movies;
@@ -147,33 +178,36 @@ New-DbaLogin -SqlInstance $SQL16 -Login "SQLSat" -PasswordExpiration:$false -Pas
 Get-DbaLogin -SqlInstance $SQL16 -Login SQLSat;
 Set-DbaLogin -SqlInstance $SQL16 -Login SQLSat -AddRole serveradmin, sysadmin
 
+
+# Let's migrate to SQL Server 2017!
+New-Item -ItemType Directory -Path C:\SQLMigration;
+
 $SQL17 = Connect-DbaInstance -SqlInstance localhost\sql17 -ClientName "SQL Saturday";
 
-Copy-DbaDatabase -Database Movies -Source $SQL16 -Destination $SQL17 -UseLastBackup -WithReplace;
+Copy-DbaDatabase -Database Movies -Source $SQL16 -Destination $SQL17 -BackupRestore -SharedPath C:\SQLMigration -SetSourceReadOnly -WithReplace;
 
 # Copy SQL Login
 Copy-DbaLogin -Source $SQL16 -Destination $SQL17 -Login SQLSat;
+Get-DbaLogin -SqlInstance $SQL17 -Login "SQLSat"
 
-# TODO: Export scripts
+# Passwords are hashed!
+Export-DbaLogin -SqlInstance $SQL16 -Path C:\SQLMigration;
+Export-DbaSpConfigure $SQL16 -Path C:\SQLMigration;
+Get-DbaDbMailConfig -SqlInstance $SQL16 | Export-DbaScript -Path C:\SQLMigration;
+Copy-DbaAgentJob -Source $SQL16 -Destination $SQL17 -DisableOnSource -DisableOnDestination
+
+# Optional: Export-DbaInstance -SqlInstance $SQL16 -Path C:\SQLMigration;
 
 # Let's just move everything over
-Start-DbaMigration -Source $SQL16 -Destination $SQL17 -SetSourceReadOnly -DisableJobsOnDestination -UseLastBackup -Force;
+Start-DbaMigration -Source $SQL16 -Destination $SQL17 -SetSourceReadOnly -DisableJobsOnSource -DisableJobsOnDestination -BackupRestore -SharedPath C:\SQLMigration -Force -Verbose;
+
 #####################
-# Work this in
-# Reset-DbaAdmin
+
 
 $Cred = Get-Credential -UserName "sa" -Message "Container SA";
 $sql17 = Connect-DbaInstance -SqlInstance "localhost,14337" -SqlCredential $Cred
 $sql19 = Connect-DbaInstance -SqlInstance "localhost,14339" -SqlCredential $Cred
 
-# How many instances of SQL Server are on my laptop?
-Find-DbaInstance -ComputerName ctx1315;
-
-# Break into one of the instances
-Reset-DbaAdmin -WhatIf
-
-# What versions am I running?
-Test-DbaBuild -Latest -SqlInstance ctx1315\sql16, ctx1315\sql17 -Update;
 
 # Connect to the server
 # TODO: Show connecting via SMO first
