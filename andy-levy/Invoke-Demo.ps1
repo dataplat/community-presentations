@@ -149,7 +149,7 @@ dbatools just:
 * Found the latest FULL and all the T-Logs through the one immediately after the RestoreTime
 * Restored the full chain right up to 21:50:00
 #>
-Restore-DbaDatabase -SqlInstance $SQL16 -Path C:\DataToImport\AdventureWorks2016.bak -DatabaseName AdvetureWorks2016 -Verbose;
+Restore-DbaDatabase -SqlInstance $SQL16 -Path C:\DataToImport\AdventureWorks2016.bak -DatabaseName AdventureWorks2016 -Verbose;
 
 # Refresh instance-level details
 $SQL16.Refresh();
