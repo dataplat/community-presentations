@@ -201,6 +201,8 @@ Copy-DbaAgentJob -Source $SQL16 -Destination $SQL17 -DisableOnSource -DisableOnD
 # Let's just move everything over
 Start-DbaMigration -Source $SQL16 -Destination $SQL17 -SetSourceReadOnly -DisableJobsOnSource -DisableJobsOnDestination -BackupRestore -SharedPath C:\SQLMigration -Force -Verbose;
 
+$SQL17.JobServer.Refresh();
+Get-DbaAgentJob -SqlInstance $SQL17 | Foreach-object {$PSItem.IsEnabled = $true;$PSItem.Alter();}
 #####################
 
 
