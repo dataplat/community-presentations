@@ -67,7 +67,7 @@ Get-DbaLastGoodCheckDb -SqlInstance $SQL16 -Verbose;
 Get-DbaAgentJob -SqlInstance $SQL16;
 
 # Install Ola Hallengren's Maintenance Solution
-Install-DbaMaintenanceSolution -SqlInstance $SQL16 -Database Master -BackupLocation c:\sqlbackup\sql16 -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All -Verbose;
+Install-DbaMaintenanceSolution -SqlInstance $SQL16 -Database Master -LogToTable -BackupLocation c:\sqlbackup\sql16\ -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All -Force -Verbose;
 
 <#
 Exception!
