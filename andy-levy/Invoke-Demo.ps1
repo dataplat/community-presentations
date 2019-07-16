@@ -70,20 +70,6 @@ Get-DbaAgentJob -SqlInstance $SQL16;
 # Not using the Server object because...reasons
 Install-DbaMaintenanceSolution -SqlInstance localhost\sql16 -Database Master -LogToTable -BackupLocation c:\sqlbackup\sql16\ -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All -Force -Verbose;
 
-<#
-Exception!
-PS C:\Users\andy\Documents\GitHub\community-presentations\andy-levy> Install-DbaMaintenanceSolution -SqlInstance $SQL16 -Database Master -BackupLocation c:\sqlbackup\sql16 -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All -Verbose;
-VERBOSE: GET https://github.com/olahallengren/sql-server-maintenance-solution/archive/master.zip with 0-byte payload
-VERBOSE: received -1-byte response of content type application/zip
-VERBOSE: Performing the operation "Dropping all objects created by Ola's Maintenance Solution" on target "WIN-0P9JV5IVQG2\sql16".
-VERBOSE: Performing the operation "Installing MaintenanceSolution.sql" on target "WIN-0P9JV5IVQG2\sql16".
-WARNING: [14:08:18][Install-DbaMaintenanceSolution] Could not execute MaintenanceSolution.sql in Master on WIN-0P9JV5IVQG2\sql16 | Invalid object name '#Config'.
-
-ComputerName    InstanceName SqlInstance           Results
-------------    ------------ -----------           -------
-WIN-0P9JV5IVQG2 SQL16        WIN-0P9JV5IVQG2\sql16 Success
-#>
-
 # Using -Force here will set unspecified parameters to their defaults
 # Most importantly, schedule start date will be today and the end will be 9999-12-31
 $MinuteSchedule = New-DbaAgentSchedule -SqlInstance $SQL16 -Schedule EveryMinute -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 1 -Force;
@@ -92,8 +78,10 @@ $FiveMinuteSchedule = New-DbaAgentSchedule -SqlInstance $SQL16 -Schedule EveryFi
 
 $TenMinuteSchedule = New-DbaAgentSchedule -SqlInstance $SQL16 -Schedule EveryTenMinutes -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 10 -Force;
 
+$SQL16.JobServer.Jobs.Refresh();
+
 # Assign the one-minute interval schedule to Transaction Log backups
-Set-DbaAgentJob -Job "DatabaseBackup - USER_DATABASES - LOG" -SqlInstance localhost\sql16 -Schedule $MinuteSchedule;
+Set-DbaAgentJob -Job "DatabaseBackup - USER_DATABASES - LOG" -SqlInstance $SQL16 -Schedule $MinuteSchedule;
 # Assign the five-minute interval to Diff backups
 Set-DbaAgentJob -Job "DatabaseBackup - USER_DATABASES - DIFF" -SqlInstance $SQL16 -Schedule $FiveMinuteSchedule;
 # Assign the ten-minute interval to Full backups
@@ -104,7 +92,7 @@ $FullBackupJob = Get-DbaAgentJob -SqlInstance $SQL16 -Job "DatabaseBackup - USER
 
 # First let's look at the SMO object that was returned
 $FullBackupJob;
-
+$FullBackupJob.JobSchedules | Out-GridView;
 # Now we can start it
 $FullBackupJob.Start();
 
@@ -183,6 +171,7 @@ Set-DbaLogin -SqlInstance $SQL16 -Login SQLSat -AddRole serveradmin, sysadmin
 
 
 # Let's migrate to SQL Server 2017!
+# TODO: Fix permissions here
 New-Item -ItemType Directory -Path C:\SQLMigration;
 
 $SQL17 = Connect-DbaInstance -SqlInstance localhost\sql17 -ClientName "SQL Saturday";
@@ -206,7 +195,7 @@ Copy-DbaAgentJob -Source $SQL16 -Destination $SQL17 -DisableOnDestination
 Start-DbaMigration -Source $SQL16 -Destination $SQL17 -SetSourceReadOnly -DisableJobsOnSource -DisableJobsOnDestination -BackupRestore -SharedPath C:\SQLMigration -Force -Verbose;
 
 $SQL17.JobServer.Refresh();
-Get-DbaAgentJob -SqlInstance $SQL17 | Foreach-object {$PSItem.IsEnabled = $true;$PSItem.Alter();}
+Get-DbaAgentJob -SqlInstance $SQL17 | Foreach-object { $PSItem.IsEnabled = $true; $PSItem.Alter(); }
 #####################
 
 
