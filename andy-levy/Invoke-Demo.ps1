@@ -67,7 +67,8 @@ Get-DbaLastGoodCheckDb -SqlInstance $SQL16 -Verbose;
 Get-DbaAgentJob -SqlInstance $SQL16;
 
 # Install Ola Hallengren's Maintenance Solution
-Install-DbaMaintenanceSolution -SqlInstance $SQL16 -Database Master -LogToTable -BackupLocation c:\sqlbackup\sql16\ -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All -Force -Verbose;
+# Not using the Server object because...reasons
+Install-DbaMaintenanceSolution -SqlInstance localhost\sql16 -Database Master -LogToTable -BackupLocation c:\sqlbackup\sql16\ -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All -Force -Verbose;
 
 <#
 Exception!
@@ -92,7 +93,7 @@ $FiveMinuteSchedule = New-DbaAgentSchedule -SqlInstance $SQL16 -Schedule EveryFi
 $TenMinuteSchedule = New-DbaAgentSchedule -SqlInstance $SQL16 -Schedule EveryTenMinutes -FrequencyType Daily -FrequencyInterval EveryDay -FrequencySubdayType Minutes -FrequencySubdayInterval 10 -Force;
 
 # Assign the one-minute interval schedule to Transaction Log backups
-Set-DbaAgentJob -Job "DatabaseBackup - USER_DATABASES - LOG" -SqlInstance $SQL16 -Schedule $MinuteSchedule;
+Set-DbaAgentJob -Job "DatabaseBackup - USER_DATABASES - LOG" -SqlInstance localhost\sql16 -Schedule $MinuteSchedule;
 # Assign the five-minute interval to Diff backups
 Set-DbaAgentJob -Job "DatabaseBackup - USER_DATABASES - DIFF" -SqlInstance $SQL16 -Schedule $FiveMinuteSchedule;
 # Assign the ten-minute interval to Full backups
