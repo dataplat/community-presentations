@@ -11,7 +11,7 @@ Find-DbaInstance -ComputerName localhost;
 Reset-DbaAdmin -SqlInstance localhost\sql16;
 
 # Scan the instances to check what version & Service Pack/Cumulative Update level we're at
-Test-DbaBuild -SqlInstance localhost\sql16,localhost\sql17 -Latest -Update;
+Test-DbaBuild -SqlInstance localhost\sql16, localhost\sql17 -Latest -Update;
 
 # Update the SQL Server 2017 instance to the latest CU
 Update-DbaInstance -ComputerName localhost -InstanceName SQL17 -Path C:\Updates;
@@ -62,6 +62,10 @@ Get-DbaDatabase -SqlInstance $SQL16 -ExcludeSystem;
 Get-DbaDbBackupHistory -SqlInstance $SQL16;
 Get-DbaDbBackupHistory -SqlInstance $SQL16 -Verbose;
 
+# Where are the backups being written?
+Get-DbaDefaultPath -SqlInstance $SQL16;
+Invoke-Item (Get-DbaDefaultPath -SqlInstance $SQL16);
+
 # When did we last run DBCC CHECKDB?
 Get-DbaLastGoodCheckDb -SqlInstance $SQL16 -Verbose;
 
@@ -69,7 +73,7 @@ Get-DbaLastGoodCheckDb -SqlInstance $SQL16 -Verbose;
 Get-DbaAgentJob -SqlInstance $SQL16;
 
 # Install Ola Hallengren's Maintenance Solution
-# Not using the Server object because...reasons
+# Not using the Server object because reasons
 # This is a bug, #5894
 Install-DbaMaintenanceSolution -SqlInstance localhost\sql16 -Database Master -LogToTable -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All -Verbose;
 
@@ -129,21 +133,22 @@ $SQL16.Databases.Refresh();
 Get-DbaDatabase -SqlInstance $SQL16 | Out-GridView;
 
 # What's our VLF situation?
+# A VLF is created when the transaction log needs to grow
+# If the growth increment is too small, we'll get lots of growth events and VLFs
+# Large numbers of VLFs can make database startup, restore , and recovery slower
 Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | Out-GridView;
 
 # Let's look at the log size and growth settings
-(Get-DbaDatabase -SqlInstance $sql16 -Database Movies).LogFiles|Select-Object -Property Name,Size,Growth,GrowthType | Format-Table -AutoSize;
+(Get-DbaDatabase -SqlInstance $sql16 -Database Movies).LogFiles | Select-Object -Property Name, Size, Growth, GrowthType | Format-Table -AutoSize;
 
 # Not good! Let's compact those and reset to something more reasonable
 # Shrink down to (we hope) 512MB, then re-expand back to 1024MB and then set a growth increment of 1024MB
 Expand-DbaDbLogFile -SqlInstance $SQL16 -Database Movies -ShrinkLogFile -ShrinkSize 16 -TargetLogSize 1024 -IncrementSize 1024;
 
-# For more about VLFs, check out https://www.sqlskills.com/blogs/kimberly/transaction-log-vlfs-too-many-or-too-few/
+# For more about VLFs, check out https://www.sqlskills.com/blogs/kimberly/transaction-log-vlfs-too-many-or-too-few/ & https://www.sqlskills.com/blogs/paul/important-change-vlf-creation-algorithm-sql-server-2014/
 
 # Test our database backups
 Test-DbaLastBackup -SqlInstance $SQL16 -Database Movies -Verbose;
-
-# TODO: Database snapshots
 
 # Create new login
 # Works for Windows Auth too!
@@ -174,10 +179,35 @@ Copy-DbaAgentJob -Source $SQL16 -Destination $SQL17 -DisableOnDestination
 Export-DbaInstance -SqlInstance localhost\sql16 -Path C:\SQLMigration -Verbose -ErrorAction SilentlyContinue;
 
 # Let's just move everything over
-Remove-DbaDatabase -SqlInstance $SQL16 -Database Movies;
 Start-DbaMigration -Source $SQL16 -Destination $SQL17 -SetSourceReadOnly -DisableJobsOnSource -DisableJobsOnDestination -BackupRestore -SharedPath C:\SQLMigration -Force -Verbose;
 
 #####################
+
+# Additional demos if we have time
+
+# Work with database snapshots
+Find-DbaCommand Snapshot;
+
+New-DbaDbSnapshot -Database Movies -Name SQLSat;
+Get-DbaDbSnapshot -Database Movies;
+
+# TODO: Alter some data & show it
+# Restoring the snapshot reverts
+Restore-DbaDbSnapshot -Database Movies -Snapshot SQLSat;
+
+# TODO: Show the data is reverted
+
+# Removing the snapshot commits the changes
+Remove-DbaDbSnapshot -Database Movies -Snapshot SQLSat;
+
+# Create a new database for IMDB data
+New-DbaDatabase -Name Movies -PrimaryFilesize 1024 -PrimaryFileGrowth 1024 -LogSize 16 -LogGrowth 16;
+
+# Create a new database for Satellite data
+New-DbaDatabase -Name Satellites -PrimaryFilesize 1024 -PrimaryFileGrowth 1024 -LogSize 16 -LogGrowth 16;
+
+# Import some satellite data here
+
 
 $SQL17.JobServer.Refresh();
 Get-DbaAgentJob -SqlInstance $SQL17 | Foreach-object { $PSItem.IsEnabled = $true; $PSItem.Alter(); }
@@ -196,26 +226,11 @@ Test-DbaMaxDop -SqlInstance $SQL16;
 $SQL16.Refresh();
 Test-DbaMaxDop -SqlInstance $SQL16;
 
-$Cred = Get-Credential -UserName "sa" -Message "Container SA";
-$SQL17 = Connect-DbaInstance -SqlInstance "localhost,14337" -SqlCredential $Cred
-$sql19 = Connect-DbaInstance -SqlInstance "localhost,14339" -SqlCredential $Cred
-
-
-# Connect to the server
-# TODO: Show connecting via SMO first
-$SQL16Instance = Connect-DbaInstance -SqlInstance ctx1315\sql16;
+$Cred = Get-Credential -UserName "SQLSat" -Message "SQL Authentication";
+$SQL17 = Connect-DbaInstance -SqlInstance localhost\sql17 -SqlCredential $Cred
 
 # Work with backups
 Get-DbaDbBackupHistory
-
-# Test last backup
-Test-DbaLastBackup
-
-# Restore point in time
-
-# Check up on DBCC status
-Get-DbaLastGoodCheckDB
-
 
 # Let's look at settings through SMO
 $SQL16Instance.Settings;
@@ -225,85 +240,16 @@ $SQL16Instance.Settings;
 $SQL16Instance.Settings.LoginMode = [Microsoft.SqlServer.Management.SMO.ServerLoginMode]::Mixed;
 
 # Changes have to be committed back to the instance
+# Do I need a restart here? Yes!
 $SQL16Instance.Alter();
 
-# Do I need a restart here? Yes!
 $SQL16Instance = Connect-DbaInstance -SqlInstance ctx1315\sql16 -SqlCredential (Get-Credential -UserName "SQLSat" -Message "Welcome to SQL Saturday!");
 
-Get-DbaLogin -SqlInstance $SQL16Instance -Login SQLSat
-Set-DbaLogin -SqlInstance $SQL16Instance -Login SQLSat -AddRole serveradmin, sysadmin
-
 $PSDefaultParameterValues['*:SqlInstance'] = $SQL16Instance;
-
-# Check configured maximum server memory against Jonathan Kehiyas's recommended formula
-Test-DbaMaxMemory;
-# TODO: Missing the $MaxMemory step
-# TODO: Maybe show SMO?
-# TODO: Show Set-DbaSpConfigure
-# TODO: Show Invoke-DbaQuery w/ sp_configure
-Test-DbaMaxMemory | Set-DbaMaxMemory -Max $MaxMemory -WhatIf;
-
-# Because MAXDOP is now a database-scoped configuration, each user DB is reported here
-Test-DbaMaxDop;
-
-# We can do this at the instance level, or for individual databases, or for all databases
-Set-DbaMaxDop -MaxDop 8 -whatif;
-Set-DbaMaxDop -MaxDop 8 -AllDatabases -whatif;
-Set-DbaMaxDop -MaxDop 2 -Database SSISDB -whatif;
-
-
-# We can install Brent Ozar's First Responder Kit to any database, and select the release or development branch
-Install-DbaFirstResponderKit -Database master;
-
-# We can install Adam Machanic's sp_whoisactive
-Install-DbaWhoIsActive -Database master;
-
-# And then we can execute it, including with filters
-Invoke-DbaWhoIsActive -ShowOwnSpid | Out-GridView;
-
-# We can install Ola Hallengren's maintenance solution
-# Can select everything, or just a portion - Backup, Integrity Check, IndexOptimize
-Install-DbaMaintenanceSolution -Database master -CleanupTime 25 -InstallJobs -ReplaceExisting;
-
-# But it's not enough to install the solution and jobs, the jobs need to be scheduled!
-Get-DbaAgentJob
-
-# Where are the backups being written?
-Get-DbaDefaultPath
 
 # Let's change that
 $SQL16Instance.Settings.BackupDirectory = 'TODO';
 $SQL16Instance.Alter();
-
-# Create a new database for IMDB data
-New-DbaDatabase -Name Movies -PrimaryFilesize 1024 -PrimaryFileGrowth 1024 -LogSize 16 -LogGrowth 16;
-
-# Create a new database for Satellite data
-New-DbaDatabase -Name Satellites -PrimaryFilesize 1024 -PrimaryFileGrowth 1024 -LogSize 16 -LogGrowth 16;
-
-# Import some satellite data here
-
-<#
-(get-dbadatabase -database Movies).logfiles[0] | select size, usedspace
-Test-DbaDbVirtualLogFile -Database Movies
-Expand-DbaDbLogFile -Database Movies -TargetLogSize 1024 -ShrinkLogFile -WhatIf
-#>
-
-# Work with database snapshots
-Find-DbaCommand Snapshot;
-
-New-DbaDbSnapshot -Database Movies -Name SQLSat;
-Get-DbaDbSnapshot -Database Movies;
-
-# TODO: Alter some data & show it
-# Restoring the snapshot reverts
-Restore-DbaDbSnapshot -Database Movies -Snapshot SQLSat;
-
-# TODO: Show the data is reverted
-
-# Removing the snapshot commits the changes
-Remove-DbaDbSnapshot -Database Movies -Snapshot SQLSat;
-
 
 # Export DBA Instance stuff (for DR)
 
