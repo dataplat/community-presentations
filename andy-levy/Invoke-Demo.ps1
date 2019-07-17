@@ -1,6 +1,6 @@
 Install-module dbatools -Scope CurrentUser;
-update-module dbatools;
-import-module dbatools;
+Update-Module dbatools -Verbose -Confirm:$false;
+Import-Module dbatools;
 
 # What SQL Servers exist?
 # Can scan your whole network or a single computer
@@ -11,7 +11,7 @@ Find-DbaInstance -ComputerName localhost;
 Reset-DbaAdmin -SqlInstance localhost\sql16;
 
 # Scan the instances to check what version & Service Pack/Cumulative Update level we're at
-Test-DbaBuild -SqlInstance localhost\sql16, localhost\sql17 -Latest -Update;
+Test-DbaBuild -SqlInstance localhost\sql16,localhost\sql17 -Latest -Update;
 
 # Update the SQL Server 2017 instance to the latest CU
 Update-DbaInstance -ComputerName localhost -InstanceName SQL17 -Path C:\Updates;
@@ -27,7 +27,10 @@ $SQL16 = New-Object Microsoft.SqlServer.Management.Smo.Server “localhost\sql16
 
 $SQL16 = Connect-DbaInstance -SqlInstance localhost\SQL16 -ClientName "SQL Saturday";
 
-# TODO: Poke around in server object
+# Look at server object
+$SQL16
+
+$SQL16 | Get-Member;
 
 # Make sure Lock Pages in Memory and Instant File Initialization are set for my service account
 # You may need to run winrm quickconfig to allow WinRM connections to the server first
@@ -41,20 +44,19 @@ WARNING: NT Service\MSSQL$SQL17 already has Lock Pages in Memory Privilege on WI
 #>
 
 # Check some other configuration settings
-Get-DbaSpConfigure -SqlInstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads | Out-Gridview;
-Set-DbaSpConfigure -SQLInstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1 -WhatIf;
-Set-DbaSpConfigure -SQLInstance $SQL16 -Name RemoteDacConnectionsEnabled, DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1;
+Get-DbaSpConfigure -SqlInstance $SQL16 -Name DefaultBackupCompression, OptimizeAdhocWorkloads | Out-Gridview;
+Set-DbaSpConfigure -SqlInstance $SQL16 -Name DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1 -WhatIf;
+Set-DbaSpConfigure -SqlInstance $SQL16 -Name DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1;
 
 # Install a few of our standard tools
 Install-DbaFirstResponderKit -SqlInstance $SQL16 -Database Master -Branch master;
 Install-DbaWhoIsActive -SqlInstance $SQL16 -Database Master;
 
 # We can see the application name in sp_whoisactive output
-Invoke-DbaWhoIsActive -SqlInstance $SQL16 -ShowOwnSpid;
 Invoke-DbaWhoIsActive -SqlInstance $SQL16 -ShowOwnSpid | Out-Gridview;
 
 # List all the user databases on the instance
-Get-DbaDatabase -sqlinstance $SQL16 -ExcludeSystem;
+Get-DbaDatabase -SqlInstance $SQL16 -ExcludeSystem;
 
 # When did we last perform a backup?
 Get-DbaDbBackupHistory -SqlInstance $SQL16;
@@ -68,7 +70,8 @@ Get-DbaAgentJob -SqlInstance $SQL16;
 
 # Install Ola Hallengren's Maintenance Solution
 # Not using the Server object because...reasons
-Install-DbaMaintenanceSolution -SqlInstance localhost\sql16 -Database Master -LogToTable -BackupLocation c:\sqlbackup\sql16\ -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All -Force -Verbose;
+# This is a bug, #5894
+Install-DbaMaintenanceSolution -SqlInstance localhost\sql16 -Database Master -LogToTable -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All -Verbose;
 
 # Using -Force here will set unspecified parameters to their defaults
 # Most importantly, schedule start date will be today and the end will be 9999-12-31
@@ -102,7 +105,6 @@ Test-DbaMaxDop -SqlInstance $SQL16;
 
 # We can do this at the instance level, or for individual databases, or for all databases
 Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 8 -whatif;
-Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 8 -AllDatabases -whatif;
 Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -Database Movies -verbose -whatif;
 
 Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -verbose;
@@ -118,16 +120,8 @@ Test-DbaMaxMemory -SqlInstance $SQL16;
 # Can pipe the output of this function right into setting the max memory
 Test-DbaMaxMemory -SqlInstance $SQL16 | Set-DbaMaxMemory -SqlInstance $SQL16 -Verbose;
 
-# Check power settings
-Test-DbaPowerPlan -ComputerName localhost;
-Set-DbaPowerPlan -ComputerName localhost -PowerPlan "High Performance";
-<#
-See Issue #5895 for request to add pipeline support.
-https://github.com/sqlcollaborative/dbatools/issues/5895
-#>
-
 # Add a couple more databases
-invoke-item -Path C:\DataToImport\;
+Invoke-Item -Path C:\DataToImport\;
 # What would the T-SQL look like?
 Restore-DbaDatabase -SqlInstance $SQL16 -Path C:\DataToImport\CacheDB -DatabaseName CacheDB -MaintenanceSolutionBackup -RestoreTime '2019-07-11 21:50:00' -OutputScriptOnly;
 # Let's restore 
@@ -146,7 +140,6 @@ $SQL16.Refresh();
 # Refresh the list of databases
 $SQL16.Databases.Refresh();
 
-Get-DbaDatabase -SqlInstance $SQL16;
 Get-DbaDatabase -SqlInstance $SQL16 | Out-GridView;
 
 # What's our VLF situation?
@@ -154,9 +147,7 @@ Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | Out-GridView;
 
 # Not good! Let's compact those and reset to something more reasonable
 # Shrink down to (we hope) 512MB, then re-expand back to 1024MB and then set a growth increment of 1024MB
-Expand-DbaDbLogFile -SqlInstance $SQL16 -Database movies -ShrinkLogFile -ShrinkSize 512 -TargetLogSize 1024 -IncrementSize 1024;
-
-Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | Select-Object -Property * | Out-GridView;
+Expand-DbaDbLogFile -SqlInstance $SQL16 -Database Movies -ShrinkLogFile -ShrinkSize 512 -TargetLogSize 1024 -IncrementSize 1024;
 
 # Test our database backups
 Test-DbaLastBackup -SqlInstance $SQL16 -Database Movies;
@@ -171,9 +162,6 @@ Set-DbaLogin -SqlInstance $SQL16 -Login SQLSat -AddRole serveradmin, sysadmin
 
 
 # Let's migrate to SQL Server 2017!
-# TODO: Fix permissions here
-New-Item -ItemType Directory -Path C:\SQLMigration;
-
 $SQL17 = Connect-DbaInstance -SqlInstance localhost\sql17 -ClientName "SQL Saturday";
 
 Copy-DbaDatabase -Database CacheDB -Source $SQL16 -Destination $SQL17 -BackupRestore -SharedPath C:\SQLMigration -WithReplace -Verbose;
@@ -184,19 +172,24 @@ Copy-DbaLogin -Source $SQL16 -Destination $SQL17 -Login SQLSat;
 Get-DbaLogin -SqlInstance $SQL17 -Login "SQLSat"
 
 # Passwords are hashed!
+Invoke-Item -Path C:\SQLMigration\;
 Export-DbaLogin -SqlInstance $SQL16 -Path C:\SQLMigration;
 Export-DbaSpConfigure $SQL16 -Path C:\SQLMigration;
 Get-DbaDbMailConfig -SqlInstance $SQL16 | Export-DbaScript -Path C:\SQLMigration;
 Copy-DbaAgentJob -Source $SQL16 -Destination $SQL17 -DisableOnDestination
 
-# Optional: Export-DbaInstance -SqlInstance $SQL16 -Path C:\SQLMigration;
+# Export everything for DR purposes
+Export-DbaInstance -SqlInstance localhost\sql16 -Path C:\SQLMigration;
 
 # Let's just move everything over
+Remove-DbaDatabase -SqlInstance $SQL16 -Database Movies;
 Start-DbaMigration -Source $SQL16 -Destination $SQL17 -SetSourceReadOnly -DisableJobsOnSource -DisableJobsOnDestination -BackupRestore -SharedPath C:\SQLMigration -Force -Verbose;
+
+#####################
 
 $SQL17.JobServer.Refresh();
 Get-DbaAgentJob -SqlInstance $SQL17 | Foreach-object { $PSItem.IsEnabled = $true; $PSItem.Alter(); }
-#####################
+
 
 
 $Cred = Get-Credential -UserName "sa" -Message "Container SA";
@@ -287,7 +280,7 @@ New-DbaDatabase -Name Satellites -PrimaryFilesize 1024 -PrimaryFileGrowth 1024 -
 # Import some satellite data here
 
 <#
-(get-dbadatabase -database movies).logfiles[0] | select size, usedspace
+(get-dbadatabase -database Movies).logfiles[0] | select size, usedspace
 Test-DbaDbVirtualLogFile -Database Movies
 Expand-DbaDbLogFile -Database Movies -TargetLogSize 1024 -ShrinkLogFile -WhatIf
 #>
