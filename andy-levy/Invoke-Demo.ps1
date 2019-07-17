@@ -1,5 +1,5 @@
 Install-module dbatools -Scope CurrentUser;
-Update-Module dbatools -Verbose -Confirm:$false;
+Update-Module dbatools -Verbose;
 Import-Module dbatools;
 
 # What SQL Servers exist?
@@ -11,7 +11,7 @@ Find-DbaInstance -ComputerName localhost;
 Reset-DbaAdmin -SqlInstance localhost\sql16;
 
 # Scan the instances to check what version & Service Pack/Cumulative Update level we're at
-Test-DbaBuild -SqlInstance localhost\sql16, localhost\sql17 -Latest -Update;
+Test-DbaBuild -SqlInstance localhost\sql16,localhost\sql17 -Latest -Update;
 
 # Update the SQL Server 2017 instance to the latest CU
 Update-DbaInstance -ComputerName localhost -InstanceName SQL17 -Path C:\Updates;
