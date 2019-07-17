@@ -99,20 +99,6 @@ $FullBackupJob.JobSchedules | Out-GridView;
 # Now we can start it
 $FullBackupJob.Start();
 
-# Because MAXDOP is now a database-scoped configuration, each user DB is reported here
-# MAXDOP is a database-scoped configuration so we can set it at the instance level but it may be overridden
-Test-DbaMaxDop -SqlInstance $SQL16;
-
-# We can do this at the instance level, or for individual databases, or for all databases
-Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 8 -whatif;
-Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -Database Movies -verbose -whatif;
-
-Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -verbose;
-Test-DbaMaxDop -SqlInstance $SQL16;
-
-$SQL16.Refresh();
-Test-DbaMaxDop -SqlInstance $SQL16;
-
 # Check our max server memory
 # This uses Jonathan Kehiyas's formula https://www.sqlskills.com/blogs/jonathan/how-much-memory-does-my-sql-server-actually-need/
 Test-DbaMaxMemory -SqlInstance $SQL16;
@@ -145,12 +131,17 @@ Get-DbaDatabase -SqlInstance $SQL16 | Out-GridView;
 # What's our VLF situation?
 Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | Out-GridView;
 
+# Let's look at the log size and growth settings
+(Get-DbaDatabase -SqlInstance $sql16 -Database Movies).LogFiles|Select-Object -Property Name,Size,Growth,GrowthType | Format-Table -AutoSize;
+
 # Not good! Let's compact those and reset to something more reasonable
 # Shrink down to (we hope) 512MB, then re-expand back to 1024MB and then set a growth increment of 1024MB
-Expand-DbaDbLogFile -SqlInstance $SQL16 -Database Movies -ShrinkLogFile -ShrinkSize 512 -TargetLogSize 1024 -IncrementSize 1024;
+Expand-DbaDbLogFile -SqlInstance $SQL16 -Database Movies -ShrinkLogFile -ShrinkSize 16 -TargetLogSize 1024 -IncrementSize 1024;
+
+# For more about VLFs, check out https://www.sqlskills.com/blogs/kimberly/transaction-log-vlfs-too-many-or-too-few/
 
 # Test our database backups
-Test-DbaLastBackup -SqlInstance $SQL16 -Database Movies;
+Test-DbaLastBackup -SqlInstance $SQL16 -Database Movies -Verbose;
 
 # TODO: Database snapshots
 
@@ -159,7 +150,6 @@ Test-DbaLastBackup -SqlInstance $SQL16 -Database Movies;
 New-DbaLogin -SqlInstance $SQL16 -Login "SQLSat" -PasswordExpiration:$false -PasswordPolicy:$false
 
 Set-DbaLogin -SqlInstance $SQL16 -Login SQLSat -AddRole serveradmin, sysadmin
-
 
 # Let's migrate to SQL Server 2017!
 $SQL17 = Connect-DbaInstance -SqlInstance localhost\sql17 -ClientName "SQL Saturday";
@@ -171,15 +161,17 @@ Get-DbaLogin -SqlInstance $SQL17 -Login "SQLSat"
 Copy-DbaLogin -Source $SQL16 -Destination $SQL17 -Login SQLSat;
 Get-DbaLogin -SqlInstance $SQL17 -Login "SQLSat"
 
-# Passwords are hashed!
+
 Invoke-Item -Path C:\SQLMigration\;
+
+# Passwords are hashed!
 Export-DbaLogin -SqlInstance $SQL16 -Path C:\SQLMigration;
 Export-DbaSpConfigure $SQL16 -Path C:\SQLMigration;
 Get-DbaDbMailConfig -SqlInstance $SQL16 | Export-DbaScript -Path C:\SQLMigration;
 Copy-DbaAgentJob -Source $SQL16 -Destination $SQL17 -DisableOnDestination
 
 # Export everything for DR purposes
-Export-DbaInstance -SqlInstance localhost\sql16 -Path C:\SQLMigration;
+Export-DbaInstance -SqlInstance localhost\sql16 -Path C:\SQLMigration -Verbose -ErrorAction SilentlyContinue;
 
 # Let's just move everything over
 Remove-DbaDatabase -SqlInstance $SQL16 -Database Movies;
@@ -190,7 +182,19 @@ Start-DbaMigration -Source $SQL16 -Destination $SQL17 -SetSourceReadOnly -Disabl
 $SQL17.JobServer.Refresh();
 Get-DbaAgentJob -SqlInstance $SQL17 | Foreach-object { $PSItem.IsEnabled = $true; $PSItem.Alter(); }
 
+# Because MAXDOP is now a database-scoped configuration, each user DB is reported here
+# MAXDOP is a database-scoped configuration so we can set it at the instance level but it may be overridden
+Test-DbaMaxDop -SqlInstance $SQL16;
 
+# We can do this at the instance level, or for individual databases, or for all databases
+Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 8 -whatif;
+Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -Database Movies -verbose -whatif;
+
+Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -verbose;
+Test-DbaMaxDop -SqlInstance $SQL16;
+
+$SQL16.Refresh();
+Test-DbaMaxDop -SqlInstance $SQL16;
 
 $Cred = Get-Credential -UserName "sa" -Message "Container SA";
 $SQL17 = Connect-DbaInstance -SqlInstance "localhost,14337" -SqlCredential $Cred
