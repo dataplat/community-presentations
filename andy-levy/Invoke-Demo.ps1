@@ -3,7 +3,14 @@ PREFLIGHT:
 Switch VSCode to High Contrast
 Set font sizes
 Start ZoomIt
+Start SSMS w/ Object Explorer open
 #>
+
+
+
+
+
+
 Install-module dbatools -Scope CurrentUser;
 Update-Module dbatools -Verbose;
 Import-Module dbatools;
