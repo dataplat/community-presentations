@@ -1,6 +1,6 @@
 <#
 PREFLIGHT:
-Switch VSCode to High Contrast
+Switch VSCode to Night Owl (colorblind) theme
 Set font sizes
 Start ZoomIt
 Start SSMS w/ Object Explorer open
