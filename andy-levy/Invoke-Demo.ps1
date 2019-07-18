@@ -1,3 +1,9 @@
+<#
+PREFLIGHT:
+Switch VSCode to High Contrast
+Set font sizes
+Start ZoomIt
+#>
 Install-module dbatools -Scope CurrentUser;
 Update-Module dbatools -Verbose;
 Import-Module dbatools;
@@ -11,7 +17,7 @@ Find-DbaInstance -ComputerName localhost;
 Reset-DbaAdmin -SqlInstance localhost\sql16;
 
 # Scan the instances to check what version & Service Pack/Cumulative Update level we're at
-Test-DbaBuild -SqlInstance localhost\sql16,localhost\sql17 -Latest -Update;
+Test-DbaBuild -SqlInstance localhost\sql16, localhost\sql17 -Latest -Update;
 
 # Update the SQL Server 2017 instance to the latest CU
 Update-DbaInstance -ComputerName localhost -InstanceName SQL17 -Path C:\Updates;
@@ -64,7 +70,7 @@ Get-DbaDbBackupHistory -SqlInstance $SQL16 -Verbose;
 
 # Where are the backups being written?
 Get-DbaDefaultPath -SqlInstance $SQL16;
-Invoke-Item (Get-DbaDefaultPath -SqlInstance $SQL16);
+Invoke-Item (Get-DbaDefaultPath -SqlInstance $SQL16).Backup;
 
 # When did we last run DBCC CHECKDB?
 Get-DbaLastGoodCheckDb -SqlInstance $SQL16 -Verbose;
@@ -103,13 +109,6 @@ $FullBackupJob.JobSchedules | Out-GridView;
 # Now we can start it
 $FullBackupJob.Start();
 
-# Check our max server memory
-# This uses Jonathan Kehiyas's formula https://www.sqlskills.com/blogs/jonathan/how-much-memory-does-my-sql-server-actually-need/
-Test-DbaMaxMemory -SqlInstance $SQL16;
-
-# Can pipe the output of this function right into setting the max memory
-Test-DbaMaxMemory -SqlInstance $SQL16 | Set-DbaMaxMemory -SqlInstance $SQL16 -Verbose;
-
 # Add a couple more databases
 Invoke-Item -Path C:\DataToImport\;
 # What would the T-SQL look like?
@@ -135,7 +134,7 @@ Get-DbaDatabase -SqlInstance $SQL16 | Out-GridView;
 # What's our VLF situation?
 # A VLF is created when the transaction log needs to grow
 # If the growth increment is too small, we'll get lots of growth events and VLFs
-# Large numbers of VLFs can make database startup, restore , and recovery slower
+# Large numbers of VLFs can make database startup, restore, and recovery slower
 Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | Out-GridView;
 
 # Let's look at the log size and growth settings
@@ -148,7 +147,8 @@ Expand-DbaDbLogFile -SqlInstance $SQL16 -Database Movies -ShrinkLogFile -ShrinkS
 # For more about VLFs, check out https://www.sqlskills.com/blogs/kimberly/transaction-log-vlfs-too-many-or-too-few/ & https://www.sqlskills.com/blogs/paul/important-change-vlf-creation-algorithm-sql-server-2014/
 
 # Test our database backups
-Test-DbaLastBackup -SqlInstance $SQL16 -Database Movies -Verbose;
+# TODO: Why is this skipped?
+Test-DbaLastBackup -SqlInstance $SQL16 -Database CacheDB -Verbose;
 
 # Create new login
 # Works for Windows Auth too!
@@ -184,6 +184,13 @@ Start-DbaMigration -Source $SQL16 -Destination $SQL17 -SetSourceReadOnly -Disabl
 #####################
 
 # Additional demos if we have time
+
+# Check our max server memory
+# This uses Jonathan Kehiyas's formula https://www.sqlskills.com/blogs/jonathan/how-much-memory-does-my-sql-server-actually-need/
+Test-DbaMaxMemory -SqlInstance $SQL16;
+
+# Can pipe the output of this function right into setting the max memory
+Test-DbaMaxMemory -SqlInstance $SQL16 | Set-DbaMaxMemory -SqlInstance $SQL16 -Verbose;
 
 # Work with database snapshots
 Find-DbaCommand Snapshot;
