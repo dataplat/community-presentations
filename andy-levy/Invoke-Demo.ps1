@@ -14,6 +14,8 @@ Start SSMS w/ Object Explorer open
 Install-module dbatools -Scope CurrentUser;
 Update-Module dbatools -Verbose;
 Import-Module dbatools;
+Set-Location C:\;
+Clear-Host;
 
 # What SQL Servers exist?
 # Can scan your whole network or a single computer
@@ -154,7 +156,6 @@ Expand-DbaDbLogFile -SqlInstance $SQL16 -Database Movies -ShrinkLogFile -ShrinkS
 # For more about VLFs, check out https://www.sqlskills.com/blogs/kimberly/transaction-log-vlfs-too-many-or-too-few/ & https://www.sqlskills.com/blogs/paul/important-change-vlf-creation-algorithm-sql-server-2014/
 
 # Test our database backups
-# TODO: Why is this skipped?
 Test-DbaLastBackup -SqlInstance $SQL16 -Database CacheDB -Verbose;
 
 # Create new login
