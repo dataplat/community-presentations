@@ -4,6 +4,8 @@ Switch VSCode to High Contrast
 Set font sizes
 Start ZoomIt
 Start SSMS w/ Object Explorer open
+
+Reminder: Don't test in production!
 #>
 
 
