@@ -117,8 +117,11 @@ $FullBackupJob = Get-DbaAgentJob -SqlInstance $SQL16 -Job "DatabaseBackup - USER
 # First let's look at the SMO object that was returned
 $FullBackupJob;
 $FullBackupJob.JobSchedules | Out-GridView;
+
 # Now we can start it
+# Two different ways!
 $FullBackupJob.Start();
+Start-DbaAgentJob -SqlInstance $SQL16 -Job "DatabaseBackup - USER_DATABASES - FULL"
 
 # Add a couple more databases
 Invoke-Item -Path C:\DataToImport\;
