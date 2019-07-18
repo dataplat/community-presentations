@@ -1,1 +1,2 @@
-Presentation was originally supposed to be on migrating data from one instance to another, but upon talking with the attendees no one knew much about PowerShell, so it turned into a Powershell/Dbatools for beginners
+"Using Dbatools To Automate Deployments" Presentation was originally supposed to be on migrating data from one instance to another, but upon talking with the attendees no one knew much about PowerShell, so it turned into a Powershell/Dbatools for beginners
+"5 Dbatools cmdlets you can use today" Presentation was for the Jacksonville SQL UsersGroup
