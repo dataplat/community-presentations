@@ -5,7 +5,7 @@ Set font sizes
 Start ZoomIt
 Start SSMS w/ Object Explorer open
 
-Reminder: Don't test in production!
+REMINDER: Don't test in production!
 #>
 
 
@@ -49,18 +49,7 @@ $SQL16
 
 $SQL16 | Get-Member;
 
-# Make sure Lock Pages in Memory and Instant File Initialization are set for my service account
-# You may need to run winrm quickconfig to allow WinRM connections to the server first
-Set-DbaPrivilege -ComputerName localhost -Type IFI, LPIM;
-
-<#
-WARNING: NT Service\MSSQL$SQL16 already has Instant File Initialization Privilege on WIN-0P9JV5IVQG2
-WARNING: NT Service\MSSQL$SQL17 already has Instant File Initialization Privilege on WIN-0P9JV5IVQG2
-WARNING: NT Service\MSSQL$SQL16 already has Lock Pages in Memory Privilege on WIN-0P9JV5IVQG2
-WARNING: NT Service\MSSQL$SQL17 already has Lock Pages in Memory Privilege on WIN-0P9JV5IVQG2
-#>
-
-# Check some other configuration settings
+# Check some configuration settings
 Get-DbaSpConfigure -SqlInstance $SQL16 -Name DefaultBackupCompression, OptimizeAdhocWorkloads | Out-Gridview;
 Set-DbaSpConfigure -SqlInstance $SQL16 -Name DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1 -WhatIf;
 Set-DbaSpConfigure -SqlInstance $SQL16 -Name DefaultBackupCompression, OptimizeAdhocWorkloads -Value 1;
@@ -81,7 +70,7 @@ Get-DbaDbBackupHistory -SqlInstance $SQL16 -Verbose;
 
 # Where are the backups being written?
 Get-DbaDefaultPath -SqlInstance $SQL16;
-Invoke-Item (Get-DbaDefaultPath -SqlInstance $SQL16).Backup;
+Invoke-Item -Path (Get-DbaDefaultPath -SqlInstance $SQL16).Backup;
 
 # When did we last run DBCC CHECKDB?
 Get-DbaLastGoodCheckDb -SqlInstance $SQL16 -Verbose;
@@ -155,7 +144,7 @@ Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | Out-GridView;
 (Get-DbaDatabase -SqlInstance $sql16 -Database Movies).LogFiles | Select-Object -Property Name, Size, Growth, GrowthType | Format-Table -AutoSize;
 
 # Not good! Let's compact those and reset to something more reasonable
-# Shrink down to (we hope) 512MB, then re-expand back to 1024MB and then set a growth increment of 1024MB
+# Shrink down to (we hope) 16MB, then re-expand back to 1024MB and then set a growth increment of 1024MB
 Expand-DbaDbLogFile -SqlInstance $SQL16 -Database Movies -ShrinkLogFile -ShrinkSize 16 -TargetLogSize 1024 -IncrementSize 1024;
 
 # For more about VLFs, check out https://www.sqlskills.com/blogs/kimberly/transaction-log-vlfs-too-many-or-too-few/ & https://www.sqlskills.com/blogs/paul/important-change-vlf-creation-algorithm-sql-server-2014/
@@ -205,6 +194,32 @@ Test-DbaMaxMemory -SqlInstance $SQL16;
 # Can pipe the output of this function right into setting the max memory
 Test-DbaMaxMemory -SqlInstance $SQL16 | Set-DbaMaxMemory -SqlInstance $SQL16 -Verbose;
 
+# Make sure Lock Pages in Memory and Instant File Initialization are set for my service account
+# You may need to run winrm quickconfig to allow WinRM connections to the server first
+Set-DbaPrivilege -ComputerName localhost -Type IFI, LPIM;
+
+<#
+WARNING: NT Service\MSSQL$SQL16 already has Instant File Initialization Privilege on WIN-0P9JV5IVQG2
+WARNING: NT Service\MSSQL$SQL17 already has Instant File Initialization Privilege on WIN-0P9JV5IVQG2
+WARNING: NT Service\MSSQL$SQL16 already has Lock Pages in Memory Privilege on WIN-0P9JV5IVQG2
+WARNING: NT Service\MSSQL$SQL17 already has Lock Pages in Memory Privilege on WIN-0P9JV5IVQG2
+#>
+
+# Because MAXDOP is now a database-scoped configuration, each user DB is reported here
+# MAXDOP is a database-scoped configuration so we can set it at the instance level but it may be overridden
+Test-DbaMaxDop -SqlInstance $SQL16;
+
+# We can do this at the instance level, or for individual databases, or for all databases
+Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 8 -whatif;
+Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -Database Movies -verbose -whatif;
+
+Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -verbose;
+Test-DbaMaxDop -SqlInstance $SQL16;
+
+$SQL16.Refresh();
+Test-DbaMaxDop -SqlInstance $SQL16;
+
+
 # Work with database snapshots
 Find-DbaCommand Snapshot;
 
@@ -232,19 +247,7 @@ New-DbaDatabase -Name Satellites -PrimaryFilesize 1024 -PrimaryFileGrowth 1024 -
 $SQL17.JobServer.Refresh();
 Get-DbaAgentJob -SqlInstance $SQL17 | Foreach-object { $PSItem.IsEnabled = $true; $PSItem.Alter(); }
 
-# Because MAXDOP is now a database-scoped configuration, each user DB is reported here
-# MAXDOP is a database-scoped configuration so we can set it at the instance level but it may be overridden
-Test-DbaMaxDop -SqlInstance $SQL16;
 
-# We can do this at the instance level, or for individual databases, or for all databases
-Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 8 -whatif;
-Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -Database Movies -verbose -whatif;
-
-Set-DbaMaxDop -SqlInstance $SQL16 -MaxDop 2 -verbose;
-Test-DbaMaxDop -SqlInstance $SQL16;
-
-$SQL16.Refresh();
-Test-DbaMaxDop -SqlInstance $SQL16;
 
 $Cred = Get-Credential -UserName "SQLSat" -Message "SQL Authentication";
 $SQL17 = Connect-DbaInstance -SqlInstance localhost\sql17 -SqlCredential $Cred
