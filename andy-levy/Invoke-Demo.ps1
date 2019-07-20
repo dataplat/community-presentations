@@ -79,8 +79,7 @@ Get-DbaLastGoodCheckDb -SqlInstance $SQL16 -Verbose;
 Get-DbaAgentJob -SqlInstance $SQL16;
 
 # Install Ola Hallengren's Maintenance Solution
-# Not using the Server object because reasons
-# This is a bug, #5894
+# Not using the Server object because of a bug, #5894
 Install-DbaMaintenanceSolution -SqlInstance localhost\sql16 -Database Master -LogToTable -CleanupTime 25 -ReplaceExisting -InstallJobs -Solution All -Verbose;
 
 # Using -Force here will set unspecified parameters to their defaults
@@ -158,9 +157,13 @@ New-DbaLogin -SqlInstance $SQL16 -Login "SQLSat" -PasswordExpiration:$false -Pas
 
 Set-DbaLogin -SqlInstance $SQL16 -Login SQLSat -AddRole serveradmin, sysadmin
 
+$MyCred = Get-Credential -UserName "SQLSat" -Message "Welcome to SQL Saturday!";
+$SQL16Alt = Connect-DbaInstance -SqlInstance localhost\sql16 -SqlCredential $MyCred;
+
 # Let's migrate to SQL Server 2017!
 $SQL17 = Connect-DbaInstance -SqlInstance localhost\sql17 -ClientName "SQL Saturday";
 
+# Defaults to copy-only backup
 Copy-DbaDatabase -Database CacheDB -Source $SQL16 -Destination $SQL17 -BackupRestore -SharedPath C:\SQLMigration -WithReplace -Verbose;
 
 # Copy SQL Login
@@ -186,6 +189,18 @@ Start-DbaMigration -Source $SQL16 -Destination $SQL17 -SetSourceReadOnly -Disabl
 #####################
 
 # Additional demos if we have time
+
+$SQL17.JobServer.Refresh();
+Get-DbaAgentJob -SqlInstance $SQL17 | Foreach-object { $PSItem.IsEnabled = $true; $PSItem.Alter(); }
+
+# Import some satellite data here
+New-DbaDatabase -sqlinstance localhost\sql16 -name Satellites -PrimaryFilesize 1024 -LogSize 1024 -LogGrowth 1024 -Owner sa -Recoverymodel FULL
+Import-DbaCsv -SqlInstance localhost\sql16 -Path C:\DataToImport\UCS_Satellite_Database_officialname_4-1-2019.txt -Delimiter `t -Database Satellites -Schema dbo -Table Satellites -KeepNulls -AutoCreateTable -SkipEmptyLine;
+Remove-DbaDatabase -SqlInstance localhost\sql16 -database Satellites;
+
+# Remove old backups
+Remove-DbaBackup -Path c:\SQLBackups\sql16 -BackupFileExtension bak -RetentionPeriod 20m -RemoveEmptyBackupFolder -Verbose -WhatIf;
+
 
 # Check our max server memory
 # This uses Jonathan Kehiyas's formula https://www.sqlskills.com/blogs/jonathan/how-much-memory-does-my-sql-server-actually-need/
@@ -219,7 +234,6 @@ Test-DbaMaxDop -SqlInstance $SQL16;
 $SQL16.Refresh();
 Test-DbaMaxDop -SqlInstance $SQL16;
 
-
 # Work with database snapshots
 Find-DbaCommand Snapshot;
 
@@ -235,53 +249,31 @@ Restore-DbaDbSnapshot -Database Movies -Snapshot SQLSat;
 # Removing the snapshot commits the changes
 Remove-DbaDbSnapshot -Database Movies -Snapshot SQLSat;
 
-# Create a new database for IMDB data
-New-DbaDatabase -Name Movies -PrimaryFilesize 1024 -PrimaryFileGrowth 1024 -LogSize 16 -LogGrowth 16;
-
-# Create a new database for Satellite data
-New-DbaDatabase -Name Satellites -PrimaryFilesize 1024 -PrimaryFileGrowth 1024 -LogSize 16 -LogGrowth 16;
-
-# Import some satellite data here
-
-
-$SQL17.JobServer.Refresh();
-Get-DbaAgentJob -SqlInstance $SQL17 | Foreach-object { $PSItem.IsEnabled = $true; $PSItem.Alter(); }
-
-
 
 $Cred = Get-Credential -UserName "SQLSat" -Message "SQL Authentication";
 $SQL17 = Connect-DbaInstance -SqlInstance localhost\sql17 -SqlCredential $Cred
 
-# Work with backups
-Get-DbaDbBackupHistory
-
 # Let's look at settings through SMO
-$SQL16Instance.Settings;
+$SQL16.Settings;
 
 # Switch to Mixed authentication mode
 # Thanks to https://kushagrarakesh.blogspot.com/2018/07/change-sql-servers-authentication-mode.html
-$SQL16Instance.Settings.LoginMode = [Microsoft.SqlServer.Management.SMO.ServerLoginMode]::Mixed;
+$SQL16.Settings.LoginMode = [Microsoft.SqlServer.Management.SMO.ServerLoginMode]::Mixed;
 
 # Changes have to be committed back to the instance
 # Do I need a restart here? Yes!
-$SQL16Instance.Alter();
+$SQL16.Alter();
 
-$SQL16Instance = Connect-DbaInstance -SqlInstance ctx1315\sql16 -SqlCredential (Get-Credential -UserName "SQLSat" -Message "Welcome to SQL Saturday!");
+$SQL16 = Connect-DbaInstance -SqlInstance localhost\sql16 -SqlCredential (Get-Credential -UserName "SQLSat" -Message "Welcome to SQL Saturday!");
 
-$PSDefaultParameterValues['*:SqlInstance'] = $SQL16Instance;
+$PSDefaultParameterValues['*:SqlInstance'] = $SQL16;
 
 # Let's change that
-$SQL16Instance.Settings.BackupDirectory = 'TODO';
-$SQL16Instance.Alter();
-
-# Export DBA Instance stuff (for DR)
-
-# Copy database - defaults to copy-only backup
+$SQL16.Settings.BackupDirectory = 'TODO';
+$SQL16.Alter();
 
 # Copy table schema
 
 # Copy table data
 
 # Look at table schema, indexes, constraints
-
-# Migrate 2016 to 2017
