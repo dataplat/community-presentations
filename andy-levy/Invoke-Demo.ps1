@@ -30,6 +30,9 @@ Reset-DbaAdmin -SqlInstance localhost\sql16;
 # Scan the instances to check what version & Service Pack/Cumulative Update level we're at
 Test-DbaBuild -SqlInstance localhost\sql16, localhost\sql17 -Latest -Update;
 
+# How long have the server and instances been online?
+Get-DbaUptime -SqlInstance localhost\sql16, localhost\sql17;
+
 # Update the SQL Server 2017 instance to the latest CU
 Update-DbaInstance -ComputerName localhost -InstanceName SQL17 -Path C:\Updates;
 
