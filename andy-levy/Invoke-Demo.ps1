@@ -153,6 +153,11 @@ Measure-DbaDbVirtualLogFile -SqlInstance $SQL16 | Out-GridView;
 # Shrink down to (we hope) 16MB, then re-expand back to 1024MB and then set a growth increment of 1024MB
 Expand-DbaDbLogFile -SqlInstance $SQL16 -Database Movies -ShrinkLogFile -ShrinkSize 16 -TargetLogSize 1024 -IncrementSize 1024;
 
+# Set the growth to 1024MB permanently
+$db = (get-dbadatabase -SqlInstance localhost\sql16 -database movies);
+$db.LogFiles[0].Growth = (1024 * 1MB);
+$db.Alter();
+
 # For more about VLFs, check out https://www.sqlskills.com/blogs/kimberly/transaction-log-vlfs-too-many-or-too-few/ & https://www.sqlskills.com/blogs/paul/important-change-vlf-creation-algorithm-sql-server-2014/
 
 # Test our database backups
