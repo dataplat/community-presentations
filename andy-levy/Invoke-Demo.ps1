@@ -75,6 +75,7 @@ Get-DbaDbBackupHistory -SqlInstance $SQL16;
 Get-DbaDbBackupHistory -SqlInstance $SQL16 -Verbose;
 
 # Where are the backups being written?
+# You can change this on Windows but not Linux
 Get-DbaDefaultPath -SqlInstance $SQL16;
 Invoke-Item -Path (Get-DbaDefaultPath -SqlInstance $SQL16).Backup;
 
