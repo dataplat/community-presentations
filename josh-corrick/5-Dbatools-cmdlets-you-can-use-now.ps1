@@ -3,7 +3,7 @@ break
 
 #Start Region Basics
 #Basics
-Install-Module Dbatools
+Install-Module Dbatools -Scope CurrentUser
 Update-Module Dbatools
 Import-Module Dbatools
 
@@ -88,7 +88,7 @@ FROM  SuperUser.dbo.Users
 WHERE DisplayName like @user
 "@
 
-Invoke-DbaQuery -SqlInstance "localhost,14333" -Query $Query -SqlParameters @{ User = "jefft%" }
+Invoke-DbaQuery -SqlInstance "localhost,14333" -Query $Query -SqlParameters @{ User = "aspner%" }
 
 
 
@@ -106,7 +106,7 @@ $database.Tables | Where-Object {$_.name -eq 'Posts'}
 #$database.Tables | Where-Object {$_.name -eq 'Posts'} | Select-Object columns
 ($database.Tables | Where-Object {$_.name -eq 'Posts'}).columns.name
 
-
+$database.Tables | Gm
 $Query = "SELECT TOP 10 Id,Title,ViewCount,Score FROM dbo.Posts WHERE Title IS NOT NULL Order BY Score Desc"
 Invoke-DbaQuery -SqlInstance "localhost,14333" -Query $Query -Database SuperUser
 
