@@ -9,39 +9,43 @@ Function prompt {"PS [DbaTools]> " }
 Install-Module Dbatools -Scope CurrentUser
 Update-Module Dbatools
 # Also may manually download from github.com/sqlcollaborative
+# Although the GitHub version is not Signed.
 
 Import-Module Dbatools
 Get-Module Dbatools
 
 Get-Command -Module Dbatools | Measure-Object
 
-Find-Command -ModuleName Dbatools
+Get-Command -name *Migration* -ModuleName Dbatools
 Find-DbaCommand -Pattern Migration
 Find-DbaCommand -Tag 'Migration'
 
 
-#End Region Basics
-
 # Use Alternative credentials if you aren't using your current login session
+
+# Toggle Screencast
 $cred = Get-Credential corrick\astrid
+
 
 $SQLCredentials = (Get-Credential)
 $PSDefaultParameterValues['Invoke-DbaQuery:SqlCredential'] = $SQLCredentials
+#Toggle ScreenCastMode
 
+#Run as two differen users
+Invoke-DbaQuery -SqlInstance sqltestbed -SqlCredential $cred -Query 'SELECT TOP 5 [PurchaseOrderID],[StockItemID],[Description],[ReceivedOuters],[ExpectedUnitPricePerOuter] FROM [WideWorldImporters].[Purchasing].[PurchaseOrderLines]'
+Invoke-DbaQuery -SqlInstance sqltestbed -Query 'SELECT TOP 5 [PurchaseOrderID],[StockItemID],[Description],[ReceivedOuters],[ExpectedUnitPricePerOuter] FROM [WideWorldImporters].[Purchasing].[PurchaseOrderLines]'
 
-
-
-
-
+cls
+#End Region Basics
 
 
 #Region Start-DbaMigration
 
 $Source = Connect-DbaInstance -SqlInstance sql2008r2
-$Destination1 = Connect-DbaInstance -SqlInstance sqltestbed\sql2017
-$Destination2 = 'sqltestbed'
+$Destination1 = Connect-DbaInstance -SqlInstance sqltestbed
+$Destination2 = 'sqltestbed\sql2017'
 Get-DbaDatabase -SqlInstance $Source -UserDbOnly
-Get-DbaDatabase -SqlInstance $Destination1,$Destination2 -UserDbOnly
+Get-DbaDatabase -SqlInstance $Destination1,$Destination2 -UserDbOnly | Group-Object SqlInstance
 
 
 
@@ -50,17 +54,23 @@ Get-DbaDatabase -SqlInstance $Destination1,$Destination2 -UserDbOnly
 # There are two major ways Start-DbaMigration Works
 Get-help -Name Start-DbaMigration -Parameter Exclude
 
-# 1. Detatch/Copy/Restore (Need Admin FileShare Open, as well as DAC Enabled for some setting migrations)
-Start-DbaMigration -Source $Source -Destination $Destination1 -DetachAttach -Exclude DatabaseMail,SysDbUserObjects,AgentServer,ExtendedEvents  |  Out-GridView
+# 1. Backup/Restore (Sql2008r2 > sqltestbed)
+Start-DbaMigration -Source $Source -Destination $Destination1 -BackupRestore -SharedPath \\dsctest\SQLMigration -Exclude DatabaseMail,SysDbUserObjects,AgentServer,ExtendedEvents
 
-
-# 2. Backup/Restore
-Start-DbaMigration -Source $Source -Destination $Destination2 -BackupRestore -LastBackup
-
-
+Get-DbaDatabase -SqlInstance $Source -UserDbOnly | Select-Object Name,SQLInstance
+Get-DbaDatabase -SqlInstance $Destination1 -UserDbOnly | Select-Object Name,SQLInstance
 
 
 
+# 2. Detatch/Copy/Restore (sql2008r2 > sqltestbed\sql2017) (Need Admin FileShare Open)
+Start-DbaMigration -Source $Source -Destination $Destination2 -DetachAttach -Exclude DatabaseMail,SysDbUserObjects,AgentServer,ExtendedEvents -Verbose
+
+
+
+
+
+
+cls
 #End Region Start-DbaMigration
 
 
@@ -92,7 +102,7 @@ Copy-DbaXESession
 
 #But there are also these 11 cmdlets not included in Start-DbaMigration
 
-# Copy-DbaAgentAlert 
+# Copy-DbaAgentAlert
 # Copy-DbaAgentJob
 # Copy-DbaAgentJobCategory
 # Copy-DbaAgentOperator
@@ -105,11 +115,18 @@ Copy-DbaXESession
 # Copy-DbaXESessionTemplate
 
 
+Copy-DbaDatabase -Source $Source -Destination $Destination2 -AllDatabases -NewName 'RightDatabase' -DetachAttach -Verbose
 
-Copy-DbaDatabase -Source $Source -Destination $Destination2 -BackupRestore -SharedPath \\dsctest\SQLMigration\ -Verbose
+Get-DbaDatabase -SqlInstance $Source -UserDbOnly | Select-Object Name,SQLInstance
+Get-DbaDatabase -SqlInstance $Destination2 -UserDbOnly | Select-Object Name,SQLInstance
+
+
 #Or if you are just migrating Users
-Copy-DbaLogin -Source $Source -Destination $Destination2 -Login 'Josh'
-Copy-DbaCredential -Source $Source -Destination $Destination2
+Copy-DbaLogin -Source $Destination1 -Destination $Destination2 -Login 'Corrick\astrid','BobWard'
+Sync-DbaLoginPermission -Source $Destination1 -Destination $Destination2 -Verbose
+
+#New-DbaCredential
+Copy-DbaCredential -Source $Destination1 -Destination $Destination2
 
 
 #end Region A look inside
@@ -117,9 +134,9 @@ Copy-DbaCredential -Source $Source -Destination $Destination2
 
 #Region offline migrations
 
-
-
+#there are options for offline or slow link migrations
 Backup-DbaDatabase
+
 Export-DbaCredential
 Export-DbaDacPackage
 Export-DbaDbRole
@@ -143,7 +160,7 @@ Export-DbaXESessionTemplate
 
 
 #If you want to just have things avalible to you for an "Offline" move, or backups
-Export-DbaInstance -SqlInstance $Destination2 -FilePath C:\users\Josh.corrick\Documents\
+Export-DbaInstance -SqlInstance $Destination1 -FilePath C:\users\Josh.corrick\Documents\ -Verbose
 
 explorer.exe C:\users\josh.CORRICK\Documents\DbatoolsExport
 
@@ -160,9 +177,9 @@ explorer.exe C:\users\josh.CORRICK\Documents\DbatoolsExport
 
 # Very Large Database Migration
 $params = @{
-    Source                          = 'Sql2008r2'
-    Destination                     = 'sqltestbed\sql2017'
-    Database                        = 'SuperBigDB'
+    Source                          = 'sqltestbed\SQL2008R2SP2'
+    Destination                     = 'sqltestbed'
+    Database                        = 'AdventureWorksDW2008R2'
     SharedPath                      = '\\dsctest\SQLMigration'
     BackupScheduleFrequencyType     = 'Daily'
     BackupScheduleFrequencyInterval = 1
@@ -173,7 +190,7 @@ $params = @{
     Force                           = $true
 }
 
-Invoke-DbaDbLogShipping @params
+Invoke-DbaDbLogShipping @params -Verbose
 
 # Recover when ready
 Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database shipped
