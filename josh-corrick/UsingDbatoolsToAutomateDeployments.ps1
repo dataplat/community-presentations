@@ -18,7 +18,7 @@ Get-Command -Module Dbatools | Measure-Object
 
 Get-Command -name *Migration* -ModuleName Dbatools
 Find-DbaCommand -Pattern Migration
-Find-DbaCommand -Tag 'Migration'
+Find-DbaCommand -Tag 'AG'
 
 
 # Use Alternative credentials if you aren't using your current login session
@@ -26,14 +26,20 @@ Find-DbaCommand -Tag 'Migration'
 # Toggle Screencast
 $cred = Get-Credential corrick\astrid
 
-
 $SQLCredentials = (Get-Credential)
 $PSDefaultParameterValues['Invoke-DbaQuery:SqlCredential'] = $SQLCredentials
 #Toggle ScreenCastMode
 
 #Run as two differen users
-Invoke-DbaQuery -SqlInstance sqltestbed -SqlCredential $cred -Query 'SELECT TOP 5 [PurchaseOrderID],[StockItemID],[Description],[ReceivedOuters],[ExpectedUnitPricePerOuter] FROM [WideWorldImporters].[Purchasing].[PurchaseOrderLines]'
-Invoke-DbaQuery -SqlInstance sqltestbed -Query 'SELECT TOP 5 [PurchaseOrderID],[StockItemID],[Description],[ReceivedOuters],[ExpectedUnitPricePerOuter] FROM [WideWorldImporters].[Purchasing].[PurchaseOrderLines]'
+$query = @"
+SELECT TOP 5 [PurchaseOrderID],[StockItemID],[Description],[ReceivedOuters],[ExpectedUnitPricePerOuter]
+FROM [WideWorldImporters].[Purchasing].[PurchaseOrderLines]
+"@
+Invoke-DbaQuery -SqlInstance sqltestbed -SqlCredential $cred -Query $query
+Invoke-DbaQuery -SqlInstance sqltestbed -SqlCredential $cred -Query 'SELECT ORIGINAL_LOGIN()'
+
+Invoke-DbaQuery -SqlInstance sqltestbed -Query @query
+Invoke-DbaQuery -SqlInstance sqltestbed -Query 'SELECT ORIGINAL_LOGIN()'
 
 cls
 #End Region Basics
@@ -115,7 +121,7 @@ Copy-DbaXESession
 # Copy-DbaXESessionTemplate
 
 
-Copy-DbaDatabase -Source $Source -Destination $Destination2 -AllDatabases -NewName 'RightDatabase' -DetachAttach -Verbose
+Copy-DbaDatabase -Source $Source -Destination $Destination2 -AllDatabases -DetachAttach -Verbose
 
 Get-DbaDatabase -SqlInstance $Source -UserDbOnly | Select-Object Name,SQLInstance
 Get-DbaDatabase -SqlInstance $Destination2 -UserDbOnly | Select-Object Name,SQLInstance
@@ -160,6 +166,7 @@ Export-DbaXESessionTemplate
 
 
 #If you want to just have things avalible to you for an "Offline" move, or backups
+$Destination1 = Connect-DbaInstance -SqlInstance sqltestbed
 Export-DbaInstance -SqlInstance $Destination1 -FilePath C:\users\Josh.corrick\Documents\ -Verbose
 
 explorer.exe C:\users\josh.CORRICK\Documents\DbatoolsExport
@@ -193,7 +200,7 @@ $params = @{
 Invoke-DbaDbLogShipping @params -Verbose
 
 # Recover when ready
-Invoke-DbaDbLogShipRecovery -SqlInstance localhost\sql2017 -Database shipped
+Invoke-DbaDbLogShipRecovery -SqlInstance sqltestbed -Database AdventureWorksDW2008R2 -Verbose
 
 
 
