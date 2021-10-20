@@ -1,3 +1,4 @@
+Clear-Host;
 <#
 # Point In Time Restore
 Who hasn't run a bad update? Let's try adjusting a Stack Overflow user's reputation.
@@ -19,6 +20,7 @@ Invoke-DbaQuery @SOQueryParams;
 Let's improve this user's reputation
 #>
 $PreUpdateTime = Get-Date;
+$SOUpdateParams = $SOQueryParams
 $SOUpdateParams["Query"] = "update [Users] set [Reputation] = 200 where [DisplayName] = 'user461855';";
 
 Invoke-DbaQuery @SOUpdateParams;
@@ -27,8 +29,8 @@ Invoke-DbaQuery @SOUpdateParams;
 We made a mistake!
 #>
 
-$SOUpdateParams["Query"] = "select getdate() AS [QueryDate],Id,DisplayName,Reputation,CreationDate,LastAccessDate from [Users] where [DisplayName] in ('user46185','user461855');";
-Invoke-DbaQuery @SOQueryParams | Format-Table -auto;
+$SOQueryParams["Query"] = "select getdate() AS [QueryDate],Id,DisplayName,Reputation,CreationDate,LastAccessDate from [Users] where [DisplayName] in ('user46185','user461855');";
+Invoke-DbaQuery @SOQueryParams | Format-Table -AutoSize;
 
 <#
 Let's restore the database so we can fix the data
@@ -64,7 +66,7 @@ Database is restored, let's verify the data is in the right state
 #>
 $SOQueryParams["Database"] = "StackOverflow2010-Restored";
 $SOQueryParams["Query"] = "select getdate() AS [QueryDate],Id,DisplayName,Reputation,CreationDate,LastAccessDate from [Users] where [DisplayName] in ('user46185','user461855');";
-Invoke-DbaQuery @SOQueryParams | Format-Table -auto;
+Invoke-DbaQuery @SOQueryParams | Format-Table -AutoSize;
 
 <#
 ## Cleanup

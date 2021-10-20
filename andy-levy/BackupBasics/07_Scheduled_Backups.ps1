@@ -1,3 +1,4 @@
+Clear-Host;
 <#
 # Scheduled Backups
 Manual backups are one thing, but we should be scheduling our backups to run regularly.
@@ -22,6 +23,10 @@ $InstallParams = @{
     Force           = $true;
 }
 Install-DbaMaintenanceSolution @InstallParams;
+<#
+Just need to update?
+#>
+Update-DbaMaintenanceSolution -SqlInstance FLEXO\sql19 -Database DBAThings;
 
 <#
 ## Verifying Installation
@@ -43,7 +48,7 @@ $JobInfoParams = @{
     Job         = @("DatabaseBackup - USER_DATABASES - Log", "DatabaseBackup - USER_DATABASES - Full");
 }
 
-Get-DbaAgentJob  @JobInfoParams | select-object Name, @{n = "ScheduleCount"; e = { $_.JobSchedules.Count } }
+Get-DbaAgentJob  @JobInfoParams | Select-Object Name, @{n = "ScheduleCount"; e = { $_.JobSchedules.Count } }
 
 <#
 ## Scheduling
@@ -55,25 +60,23 @@ Let's assign 5-minute and 15-minute schedules to our Log and Full backup jobs, r
 * `Set-DbaAgentJob`
 * `Start-DbaAgentJob`
 #>
-
-$FiveMinuteParams = @{
-    SqlInstance             = "FLEXO\sql19";
-    Schedule                = "Five Minutes";
-    FrequencyType           = "Daily";
-    FrequencyInterval       = 1;
-    FrequencySubdayInterval = 5;
-    FrequencySubdayType     = "Minutes";
-    Force                   = $true;
+$StandardParams = @{
+    SqlInstance         = "FLEXO\sql19";
+    FrequencyType       = "Daily";
+    FrequencyInterval   = 1;
+    FrequencySubdayType = "Minutes";
+    Force               = $true;
 }
 
-$FifteenMinuteParams = @{
-    SqlInstance             = "FLEXO\sql19";
+$FiveMinuteParams = $StandardParams;
+$FiveMinuteParams += @{
+    Schedule                = "Five Minutes";
+    FrequencySubdayInterval = 5;
+}
+$FifteenMinuteParams = $StandardParams;
+$FifteenMinuteParams += @{
     Schedule                = "Fifteen Minutes";
-    FrequencyType           = "Daily";
-    FrequencyInterval       = 1;
     FrequencySubdayInterval = 15;
-    FrequencySubdayType     = "Minutes";
-    Force                   = $true;
 }
 
 $EveryFiveMinutes = New-DbaAgentSchedule @FiveMinuteParams;

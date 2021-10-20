@@ -4,8 +4,12 @@
 			"path": "."
 		},
 		{
-			"name":"SQL Backups",
+			"name": "SQL Backups",
 			"path": "c:\\sql\\backup"
+		},
+		{
+			"name": "Export",
+			"path": "c:\\sql\\export"
 		}
 	],
 	"settings": {}

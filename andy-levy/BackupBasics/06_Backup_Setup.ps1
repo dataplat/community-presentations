@@ -1,3 +1,4 @@
+Clear-Host;
 <#
 # Basic Backup Setup
 ## Where do backups go?

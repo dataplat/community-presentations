@@ -1,3 +1,4 @@
+Clear-Host;
 <#
 # Preparing for the Worst
 

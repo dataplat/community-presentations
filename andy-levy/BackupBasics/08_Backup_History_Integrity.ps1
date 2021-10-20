@@ -1,3 +1,4 @@
+Clear-Host;
 <#
 # Checking on Backups
 ## Last Backup of Each Database
@@ -91,15 +92,7 @@ $BackupTestResults | ConvertTo-DbaDataTable | Write-DbaDataTable @OutputParams;
 <#
 The auditors are coming! Provide documentation!
 #>
-$ExcelParams = @{
-    Path         = "C:\users\andy\documents\BackupVerification.xlsx";
-    ClearSheet   = $true;
-    AutoSize     = $true;
-    FreezeTopRow = $true;
-    BoldTopRow   = $true;
-    AutoFilter   = $true;
-    Show         = $true;
-}
+$ExcelParams["Path"] ="C:\users\andy\documents\BackupVerification.xlsx";
 $QueryParams = @{
     SqlInstance = "FLEXO\sql19";
     Database    = "DBAThings";

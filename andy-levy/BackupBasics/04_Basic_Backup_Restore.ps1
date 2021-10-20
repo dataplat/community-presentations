@@ -62,7 +62,7 @@ Backup-DbaDatabase @BackupParams;
 ### Function Demonstrated
 * `Restore-DbaDatabase`
 #>
-
+Clear-Host;
 $RestoreParams = @{
     SqlInstance = "FLEXO\sql19";
     Path        = "C:\SQL\Backup\Satellites";
@@ -102,3 +102,5 @@ $RestoreParams += @{
     ReplaceDbNameInFile = $true;
 }
 Restore-DbaDatabase @RestoreParams;
+
+Restore-DbaDatabase @RestoreParams | Set-Clipboard;
