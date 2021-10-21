@@ -1,11 +1,7 @@
+Clear-Host;
 <#
 Installation & Maintenance
 
-Trust the PowerShell Gallery
-#>
-Set-PSRepository -Name PSGallery -InstallationPolicy Trusted;
-
-<#
 Check for an existing dbatools module installation
 #>
 Get-Module -ListAvailable dbatools;
@@ -20,3 +16,7 @@ if (Get-Module -ListAvailable -Name dbatools) {
 else {
     Install-Module -Name dbatools -Scope CurrentUser -Verbose;
 }
+<#
+Trust the PowerShell Gallery
+#>
+Set-PSRepository -Name PSGallery -InstallationPolicy Trusted;
