@@ -36,13 +36,6 @@ Get-DbaDbBackupHistory @HistoryParams | Sort-Object -Property Start | Format-Tab
 * `Export-Excel`
 #>
 
-$HistoryParams = @{
-    SqlInstance     = "FLEXO\sql17";
-    IncludeCopyOnly = $true;
-    Since           = (Get-Date).AddDays(-1);
-    DeviceType      = "Disk";
-};
-
 $BackupHistory = Get-DbaDbBackupHistory @HistoryParams;
 
 $ExcelParams = @{
@@ -67,7 +60,7 @@ And then, how can we prove that we're doing it?
 $BackupTestParams = @{
     SqlInstance = "FLEXO\sql17";
     Destination = "FLEXO\sql19";
-    Database    = @("DBAThings", "Geocaches", "Satellites");
+    Database    = @("DBAThings", "Satellites");
 }
 $BackupTestResults = Test-DbaLastBackup @BackupTestParams;
 $BackupTestResults | Format-List -Property *;
@@ -98,7 +91,7 @@ $QueryParams = @{
     Database    = "DBAThings";
     Query       = "select * from BackupValidation";
 }
-invoke-dbaquery @QueryParams | convertto-dbadatatable | Export-Excel @ExcelParams;
+Invoke-DbaQuery @QueryParams | ConvertTo-DbaDataTable | Export-Excel @ExcelParams;
 
 <#
 ## Backup Speed

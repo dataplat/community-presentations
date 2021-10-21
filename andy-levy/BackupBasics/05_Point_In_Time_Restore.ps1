@@ -20,7 +20,7 @@ Invoke-DbaQuery @SOQueryParams;
 Let's improve this user's reputation
 #>
 $PreUpdateTime = Get-Date;
-$SOUpdateParams = $SOQueryParams
+$SOUpdateParams = $SOQueryParams;
 $SOUpdateParams["Query"] = "update [Users] set [Reputation] = 200 where [DisplayName] = 'user461855';";
 
 Invoke-DbaQuery @SOUpdateParams;

@@ -12,5 +12,15 @@
 			"path": "c:\\sql\\export"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"workbench.colorTheme": "Visual Studio Light",
+		"editor.fontWeight": "normal",
+		"window.zoomLevel": 0,
+		"editor.wordWrap": "on",
+		"editor.wrappingStrategy": "advanced",
+		"editor.fontSize": 16,
+		"terminal.integrated.fontFamily": "consolas",
+		"terminal.integrated.fontSize": 16,
+		"editor.minimap.enabled": false
+	}
 }
