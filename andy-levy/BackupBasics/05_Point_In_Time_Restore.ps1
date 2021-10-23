@@ -71,9 +71,9 @@ Invoke-DbaQuery @SOQueryParams | Format-Table -AutoSize;
 <#
 ## Cleanup
 
-Data looks good in the restored database, so we'll fix things up in the live database using that data (not shown), then remove the restored database. I'm using `-Confirm:$false` because the prompt won't work in Azure Data Studio.
+Data looks good in the restored database, so we'll fix things up in the live database using that data (not shown), then remove the restored database.
 ## Function Demonstrated:
 * `Remove-DbaDatabase`
 #>
 
-Remove-DbaDatabase -SqlInstance FLEXO\SQL17 -Database StackOverflow2010-Restored -Confirm:$false;
+Remove-DbaDatabase -SqlInstance FLEXO\SQL17 -Database StackOverflow2010-Restored;
