@@ -13,10 +13,12 @@ $BackupParams = @{
     CreateFolder = $true;
 }
 $BackupResult = Backup-DbaDatabase @BackupParams;
+
+$BackupResult | Format-List -Property *;
+
 # Save this for later
 $SingleBackupFile = $BackupResult.BackupPath;
 
-$BackupResult | Format-List -Property *;
 
 <#
 Let's go a bit more complex
@@ -52,7 +54,11 @@ The -OutputScriptOnly switch parameter tells -Backup-DbaDatabase to not perform 
 $BackupParams += @{
     OutputScriptOnly = $true;
 }
-Backup-DbaDatabase @BackupParams;
+
+Backup-DbaDatabase @BackupParams | Set-Clipboard;
+<#
+
+#>
 
 <#
 ## Restoring the Latest Backup
@@ -101,6 +107,8 @@ $RestoreParams += @{
     OutputScriptOnly    = $true;
     ReplaceDbNameInFile = $true;
 }
-Restore-DbaDatabase @RestoreParams;
 
 Restore-DbaDatabase @RestoreParams | Set-Clipboard;
+<#
+
+#>
