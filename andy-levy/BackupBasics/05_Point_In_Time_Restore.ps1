@@ -20,14 +20,7 @@ Let's restore the database so we can fix the data
 
 Take a log backup so we have something to work with
 #>
-$BackupParams = @{
-    SqlInstance = "FLEXO\sql17";
-    Type        = "Log";
-    Database    = "StackOverflow2010";
-    FilePath    = 'C:\SQL\Backup\FLEXO$SQL17\StackOverflow2010\LOG\FLEXO$SQL17_StackOverflow2010_LOG_' + (get-date -f "yyyyMMdd_HHmmss") + ".trn";
-    BuildPath   = $true;
-}
-Backup-DbaDatabase @BackupParams;
+Start-DbaAgentJob -SqlInstance FLEXO\sql17 -Job "DatabaseBackup - USER_DATABASES - Log" -Wait;
 
 <#
 Now we'll restore the database to a new one to use as a reference
