@@ -1,36 +1,19 @@
 Clear-Host;
 <#
 # Point In Time Restore
-Who hasn't run a bad update? Let's try adjusting a Stack Overflow user's reputation.
+Who hasn't accidentally dropped a table?
+
 ## Function Demonstrated:
 * `Invoke-DbaQuery`
 #>
 
-<#
-Take a look at some data
-#>
-$SOQueryParams = @{
+$PreUpdateTime = Get-Date;
+$SOUpdateParams = @{
     SqlInstance = "FLEXO\sql17";
     Database    = "StackOverflow2010";
-    Query       = "select getdate() AS [QueryDate],* from [Users] where [DisplayName] = 'user46185';";
+    Query = "drop table [Users];";
 }
-Invoke-DbaQuery @SOQueryParams;
-
-<#
-Let's improve this user's reputation
-#>
-$PreUpdateTime = Get-Date;
-$SOUpdateParams = $SOQueryParams;
-$SOUpdateParams["Query"] = "update [Users] set [Reputation] = 200 where [DisplayName] = 'user461855';";
-
 Invoke-DbaQuery @SOUpdateParams;
-
-<#
-We made a mistake!
-#>
-
-$SOQueryParams["Query"] = "select getdate() AS [QueryDate],Id,DisplayName,Reputation,CreationDate,LastAccessDate from [Users] where [DisplayName] in ('user46185','user461855');";
-Invoke-DbaQuery @SOQueryParams | Format-Table -AutoSize;
 
 <#
 Let's restore the database so we can fix the data
@@ -62,10 +45,18 @@ $RestoreResult = Restore-DbaDatabase @RestoreParams;
 $RestoreResult | Format-List -Property *;
 
 <#
-Database is restored, let's verify the data is in the right state
+Database is restored, let's verify the table is there
 #>
+
+$SOQueryParams = @{
+    SqlInstance = "FLEXO\sql17";
+    Database    = "StackOverflow2010";
+    Query = "select count(*) as UserCount from [Users];"
+}
+
+Invoke-DbaQuery @SOQueryParams | Format-Table -AutoSize;
+
 $SOQueryParams["Database"] = "StackOverflow2010-Restored";
-$SOQueryParams["Query"] = "select getdate() AS [QueryDate],Id,DisplayName,Reputation,CreationDate,LastAccessDate from [Users] where [DisplayName] in ('user46185','user461855');";
 Invoke-DbaQuery @SOQueryParams | Format-Table -AutoSize;
 
 <#
