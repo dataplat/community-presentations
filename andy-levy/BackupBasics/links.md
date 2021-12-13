@@ -1,4 +1,4 @@
-* GitHub repository
+* [GitHub repository](https://github.com/alevyinroc/community-presentations/tree/master/andy-levy/BackupBasics)
 * [dbatools main site](https://dbatools.io/)
 * [dbatools documentation](https://docs.dbatools.io/)
 * [SQL Server Community Slack](https://sqlslack.com/)
