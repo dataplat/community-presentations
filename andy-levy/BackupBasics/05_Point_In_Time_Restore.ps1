@@ -11,7 +11,7 @@ $PreUpdateTime = Get-Date;
 $SOUpdateParams = @{
     SqlInstance = "FLEXO\sql17";
     Database    = "StackOverflow2010";
-    Query = "drop table [Users];";
+    Query       = "drop table [Users];";
 }
 Invoke-DbaQuery @SOUpdateParams;
 
@@ -26,16 +26,20 @@ Start-DbaAgentJob -SqlInstance FLEXO\sql17 -Job "DatabaseBackup - USER_DATABASES
 Now we'll restore the database to a new one to use as a reference
 #>
 $RestoreParams = @{
-    SqlInstance               = "FLEXO\sql17";
-    Path                      = 'C:\sql\Backup\FLEXO$SQL17\StackOverflow2010\';
-    DatabaseName              = "StackOverflow2010-Restored";
-    RestoreTime               = $PreUpdateTime;
-    ReplaceDbNameInFile       = $true;
-    MaintenanceSolutionBackup = $true;
+    SqlInstance                = "FLEXO\sql17";
+    Path                       = 'C:\sql\Backup\FLEXO$SQL17\StackOverflow2010\';
+    DatabaseName               = "StackOverflow2010";
+    RestoredDatabaseNamePrefix = "Restored";
+    RestoreTime                = $PreUpdateTime;
+    ReplaceDbNameInFile        = $true;
+    MaintenanceSolutionBackup  = $true;
+    WithReplace                = $true;
 }
 $RestoreResult = Restore-DbaDatabase @RestoreParams;
 
 $RestoreResult | Format-List -Property *;
+
+$RestoredDBName = $RestoreResult[-1].Database;
 
 <#
 Database is restored, let's verify the table is there
@@ -44,12 +48,12 @@ Database is restored, let's verify the table is there
 $SOQueryParams = @{
     SqlInstance = "FLEXO\sql17";
     Database    = "StackOverflow2010";
-    Query = "select count(*) as UserCount from [Users];"
+    Query       = "select count(*) as UserCount from [Users];"
 }
 
 Invoke-DbaQuery @SOQueryParams | Format-Table -AutoSize;
 
-$SOQueryParams["Database"] = "StackOverflow2010-Restored";
+$SOQueryParams["Database"] = $RestoredDBName;
 Invoke-DbaQuery @SOQueryParams | Format-Table -AutoSize;
 
 <#
@@ -60,4 +64,4 @@ Data looks good in the restored database, so we'll fix things up in the live dat
 * `Remove-DbaDatabase`
 #>
 
-Remove-DbaDatabase -SqlInstance FLEXO\SQL17 -Database StackOverflow2010-Restored;
+Remove-DbaDatabase -SqlInstance FLEXO\SQL17 -Database $RestoredDBName;
