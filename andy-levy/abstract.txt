@@ -1,5 +1,0 @@
-You’ve just inherited a large SQL Server estate, and next month’s merger will double the number of instances you’re responsible for. Or maybe you have one big instance with thousands of databases on it. Are there backups? Are they good? Are your systems in good health?
-
-The department just decided to reorganize and consolidate databases to prepare for an upgrade to the next release of SQL Server. How are you going to manage all this?
-
-It's time to automate with the dbatools Powershell module. We’ll briefly talk about the project itself, then take a tour of functions commonly used to manage SQL Server environments and data. When you leave, you’ll be ready to level up your administration toolkit and start reducing your daily workload.
